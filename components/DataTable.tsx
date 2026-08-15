@@ -824,50 +824,50 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
             )}
           </tbody>
         </table>
-        <div className="h-48 pointer-events-none" />
+        <div className="h-16 pointer-events-none" />
       </div>
 
       {/* Pinned Pagination Footer */}
-      <div className="p-4 border-t bg-gray-50/80 backdrop-blur-sm flex flex-wrap items-center justify-between gap-4 z-20">
+      <div className="px-4 py-2 border-t bg-gray-50/80 backdrop-blur-sm flex flex-wrap items-center justify-between gap-3 z-20">
         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
           Affichage de {filteredData.length === 0 ? 0 : Math.min(filteredData.length, (currentPage - 1) * rowsPerPage + 1)}-{Math.min(filteredData.length, currentPage * rowsPerPage)} sur {filteredData.length} records
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button 
             onClick={() => setCurrentPage(1)} 
             disabled={currentPage === 1}
-            className="p-2 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronsLeft className="w-4 h-4" />
+            <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
           <button 
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
             disabled={currentPage === 1}
-            className="p-2 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           
-          <div className="flex items-center gap-1 px-4">
+          <div className="flex items-center gap-1 px-2">
             <span className="text-xs font-black text-gray-400">Page</span>
-            <span className="text-xs font-black text-indigo-600 px-2 py-1 bg-indigo-50 rounded-md min-w-[30px] text-center">{currentPage}</span>
+            <span className="text-xs font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md min-w-[26px] text-center">{currentPage}</span>
             <span className="text-xs font-black text-gray-400">sur {totalPages || 1}</span>
           </div>
 
           <button 
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
             disabled={currentPage === totalPages || totalPages === 0}
-            className="p-2 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
           <button 
             onClick={() => setCurrentPage(totalPages)} 
             disabled={currentPage === totalPages || totalPages === 0}
-            className="p-2 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronsRight className="w-4 h-4" />
+            <ChevronsRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

@@ -6,7 +6,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
   PieChart, Pie, Cell 
 } from 'recharts';
-import { ThreeDBarVertical } from './ThreeDShapes';
 import { 
   Camera, ArrowRightLeft, Calendar, TrendingUp, TrendingDown, Minus, 
   Battery, AlertTriangle, Database, Layers, CheckSquare
@@ -298,121 +297,185 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Fixation de la hauteur du conteneur parent à 450px */}
-        <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-[450px]" ref={pieChartRef}>
-          <div className="flex justify-between items-center mb-8 shrink-0">
-             <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-               <Layers className="w-6 h-6 text-indigo-500" />
-               Mix Opérationnel (X)
-             </h3>
-             <button onClick={() => downloadChartAsJpg(pieChartRef, 'statut_x')} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all"><Camera className="w-5 h-5" /></button>
+        <div className="bg-white p-8 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col h-[450px] relative overflow-hidden group hover:shadow-[0_30px_70px_rgba(99,102,241,0.08)] transition-all duration-500" ref={pieChartRef}>
+          <div className="flex justify-between items-center mb-6 shrink-0 z-10">
+             <div>
+               <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                 <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600">
+                   <Layers className="w-5 h-5" />
+                 </div>
+                 Mix Opérationnel (X) — Donut Pro
+               </h3>
+               <p className="text-[11px] font-bold text-slate-400 mt-0.5">Répartition dynamique par statut d'intervention</p>
+             </div>
+             <button onClick={() => downloadChartAsJpg(pieChartRef, 'statut_x')} className="p-3 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl text-slate-400 transition-all shadow-xs"><Camera className="w-5 h-5" /></button>
           </div>
-          <div className="h-[320px] w-full relative">
+          <div className="h-[320px] w-full relative z-10">
             <ResponsiveContainer width="99%" height={320}>
               <PieChart>
-                <Pie data={statsByX} dataKey="count" nameKey="name" cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={5} onClick={(data) => handleChartClick(data, "X")} className="cursor-pointer">
+                <defs>
+                  {Object.entries(X_COLORS).map(([key, color]) => (
+                    <linearGradient key={`grad-${key}`} id={`pieGrad-${key}`} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.8} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <Pie 
+                  data={statsByX} 
+                  dataKey="count" 
+                  nameKey="name" 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={70} 
+                  outerRadius={110} 
+                  paddingAngle={5} 
+                  onClick={(data) => handleChartClick(data, "X")} 
+                  className="cursor-pointer"
+                >
                   {statsByX.map((entry, index) => <Cell key={`cell-${index}`} fill={X_COLORS[entry.name] || '#8884d8'} />)}
                 </Pie>
                 <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
               </PieChart>
             </ResponsiveContainer>
+            {/* Center Stat Badge */}
+            <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+              <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest">Total</span>
+              <span className="text-2xl font-black text-slate-900">{Array.isArray(data) ? data.length : 0}</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-[450px]" ref={regionChartRef}>
-          <div className="flex justify-between items-center mb-8 shrink-0">
-             <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-               <Layers className="w-6 h-6 text-indigo-500" />
-               Production Globale par Région
-             </h3>
-             <button onClick={() => downloadChartAsJpg(regionChartRef, 'production_region')} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all"><Camera className="w-5 h-5" /></button>
+        <div className="bg-white p-8 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col h-[450px] relative overflow-hidden group hover:shadow-[0_30px_70px_rgba(99,102,241,0.08)] transition-all duration-500" ref={regionChartRef}>
+          <div className="flex justify-between items-center mb-6 shrink-0 z-10">
+             <div>
+               <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                 <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600">
+                   <TrendingUp className="w-5 h-5" />
+                 </div>
+                 Production Globale par Région — Histogramme HD
+               </h3>
+               <p className="text-[11px] font-bold text-slate-400 mt-0.5">Analyse comparative par zone géographique et statut</p>
+             </div>
+             <button onClick={() => downloadChartAsJpg(regionChartRef, 'production_region')} className="p-3 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl text-slate-400 transition-all shadow-xs"><Camera className="w-5 h-5" /></button>
           </div>
-          <div className="h-[320px] w-full relative">
+          <div className="h-[320px] w-full relative z-10">
             <ResponsiveContainer width="99%" height={320}>
-              <BarChart data={pivotTableData} margin={{ bottom: 40 }} onClick={(e) => handleChartClick(e, "Region")}>
+              <BarChart data={pivotTableData} margin={{ bottom: 35, top: 10, left: -10, right: 10 }} onClick={(e) => handleChartClick(e, "Region")}>
+                <defs>
+                  {Object.entries(X_COLORS).map(([key, color]) => (
+                    <linearGradient key={`barGrad-${key}`} id={`barGrad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                    </linearGradient>
+                  ))}
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="region" tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} angle={-45} textAnchor="end" height={80} interval={0} />
+                <XAxis dataKey="region" tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} angle={-35} textAnchor="end" height={60} interval={0} />
                 <YAxis tick={{fontSize: 10, fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{fill: '#F8FAFC'}} contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }} />
+                <Tooltip 
+                  cursor={{fill: 'rgba(248, 250, 252, 0.8)'}} 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-slate-900/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl border border-slate-800 text-xs space-y-2">
+                          <p className="font-black uppercase tracking-wider text-indigo-400 border-b border-slate-800 pb-1">{label}</p>
+                          <div className="space-y-1">
+                            {payload.map((p, idx) => (
+                              <div key={idx} className="flex justify-between gap-4">
+                                <span className="text-slate-300">{p.dataKey}:</span>
+                                <span className="font-black">{p.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} 
+                />
                 <Legend iconType="circle" verticalAlign="top" height={36}/>
                 {X_OPTIONS.map(opt => (
-                  <Bar key={opt} dataKey={opt} stackId="a" fill={X_COLORS[opt]} cursor="pointer" shape={<ThreeDBarVertical />} />
+                  <Bar key={opt} dataKey={opt} stackId="a" fill={X_COLORS[opt]} cursor="pointer" />
                 ))}
-                <Bar dataKey="Autre" stackId="a" fill={X_COLORS["Autre"]} cursor="pointer" shape={<ThreeDBarVertical />} />
+                <Bar dataKey="Autre" stackId="a" fill={X_COLORS["Autre"]} cursor="pointer" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col" ref={compareTableRef}>
+      <div className="bg-white p-8 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col" ref={compareTableRef}>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
           <div>
             <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-              <ArrowRightLeft className="w-7 h-7 text-indigo-600" />
-              Évolution Temporelle des Flux
+              <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
+                <ArrowRightLeft className="w-6 h-6" />
+              </div>
+              Tableau Analytique Avancé & Comparatif Temporel
             </h3>
-            <p className="text-sm font-medium text-slate-400 mt-1 uppercase tracking-widest">Comparaison dynamique de la production.</p>
+            <p className="text-sm font-medium text-slate-400 mt-1 uppercase tracking-widest">Matrice executive haute performance style Vercel / Linear.</p>
           </div>
           
-          <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-3xl border border-slate-100 shadow-inner">
+          <div className="flex items-center gap-4 bg-slate-50/80 p-4 rounded-3xl border border-slate-200/60 shadow-inner backdrop-blur-md">
             <div className="flex flex-col gap-1">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Base Date (A)</span>
               <input type="date" className="border-none bg-transparent text-sm font-black focus:ring-0 cursor-pointer text-slate-700" value={dateA} onChange={(e) => setDateA(e.target.value)} />
             </div>
             <div className="px-2 text-slate-300"><ArrowRightLeft className="w-4 h-4" /></div>
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Target Date (B)</span>
+              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Target Date (B)</span>
               <input type="date" className="border-none bg-transparent text-sm font-black text-indigo-600 focus:ring-0 cursor-pointer" value={dateB} onChange={(e) => setDateB(e.target.value)} />
             </div>
-            <button onClick={() => downloadTableAsJpg(compareTableRef, 'evolution_quotidienne')} className="ml-4 p-4 bg-white border border-slate-200 rounded-2xl hover:bg-slate-100 transition shadow-sm text-slate-500"><Camera className="w-5 h-5" /></button>
+            <button onClick={() => downloadTableAsJpg(compareTableRef, 'evolution_quotidienne')} className="ml-4 p-4 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:text-indigo-600 transition shadow-xs text-slate-500"><Camera className="w-5 h-5" /></button>
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02),_inset_0_1px_2px_rgba(255,255,255,0.8)] hover:shadow-[0_30px_60px_rgba(99,102,241,0.08),_0_1px_2px_rgba(0,0,0,0.02)] transition-all duration-500 overflow-hidden bg-white">
+        <div className="overflow-x-auto rounded-[2.5rem] border border-slate-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden bg-white">
           <table className="min-w-full text-[11px] text-left border-collapse">
             <thead>
               <tr className="bg-slate-900 text-white">
-                <th className="px-6 py-6 border-r border-slate-800 sticky left-0 bg-slate-900 z-10 text-white font-black uppercase tracking-widest" rowSpan={2}>Région</th>
+                <th className="px-6 py-5 border-r border-slate-800 sticky left-0 bg-slate-900 z-10 text-white font-black uppercase tracking-widest text-xs" rowSpan={2}>Région</th>
                 {X_OPTIONS.map(opt => (
-                  <th key={opt} className="px-2 py-4 border-r border-slate-800 text-center uppercase tracking-tighter text-[10px]" colSpan={2} style={{ backgroundColor: X_COLORS[opt], color: opt === XStatus.STHIC_ATV_HTC ? 'black' : 'white' }}>{opt}</th>
+                  <th key={opt} className="px-2 py-4 border-r border-slate-800 text-center uppercase tracking-tighter text-[10px] font-black" colSpan={2} style={{ backgroundColor: X_COLORS[opt], color: opt === XStatus.STHIC_ATV_HTC ? '#000' : '#fff' }}>{opt}</th>
                 ))}
-                <th className="px-6 py-4 border-l border-slate-800 text-center bg-slate-800 text-white font-black" colSpan={2}>Global Flow</th>
+                <th className="px-6 py-4 border-l border-slate-800 text-center bg-slate-800 text-white font-black text-xs" colSpan={2}>Global Flow</th>
               </tr>
-              <tr className="bg-slate-50 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+              <tr className="bg-slate-100 text-[10px] text-slate-500 font-black uppercase tracking-widest border-t border-slate-800">
                 {X_OPTIONS.map(opt => (
                   <React.Fragment key={`${opt}-sub`}>
-                    <th className="px-2 py-3 border-r border-slate-100 text-center">A</th>
-                    <th className="px-2 py-3 border-r border-slate-100 text-center bg-indigo-50/30 text-indigo-600">B</th>
+                    <th className="px-2 py-3 border-r border-slate-200 text-center">Période A</th>
+                    <th className="px-2 py-3 border-r border-slate-200 text-center bg-indigo-50/60 text-indigo-700 font-black">Période B</th>
                   </React.Fragment>
                 ))}
-                <th className="px-2 py-3 border-r border-slate-100 text-center">A</th>
-                <th className="px-2 py-3 text-center bg-indigo-50 text-indigo-700">B</th>
+                <th className="px-2 py-3 border-r border-slate-200 text-center">Période A</th>
+                <th className="px-2 py-3 text-center bg-indigo-100 text-indigo-900 font-black">Période B</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {comparisonData.map((row, idx) => (
-                <tr key={row.region} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/20'} hover:bg-indigo-50/30 transition-colors`}>
-                  <td className="px-6 py-4 border-r font-black text-slate-700 sticky left-0 bg-inherit z-10 uppercase tracking-tight">{row.region}</td>
+                <tr key={row.region} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-indigo-50/40 transition-colors`}>
+                  <td className="px-6 py-4 border-r font-black text-slate-800 sticky left-0 bg-inherit z-10 uppercase tracking-tight text-xs">{row.region}</td>
                   {X_OPTIONS.map(opt => {
                     const valA = (row.dataA as Record<string, number>)[opt] || 0;
                     const valB = (row.dataB as Record<string, number>)[opt] || 0;
                     return (
                       <React.Fragment key={`${row.region}-${opt}`}>
-                        <td className="px-2 py-4 border-r text-center text-slate-300">{valA || '-'}</td>
-                        <td className="px-2 py-4 border-r text-center font-bold">
+                        <td className="px-2 py-4 border-r border-slate-100 text-center text-slate-400 font-bold">{valA || '-'}</td>
+                        <td className="px-2 py-4 border-r border-slate-100 text-center font-bold bg-indigo-50/10">
                           <div className="flex items-center justify-center gap-1.5">
-                            <span className={valB > 0 ? 'text-slate-900 font-black' : 'text-slate-200'}>{valB || '-'}</span>
+                            <span className={valB > 0 ? 'text-slate-900 font-black' : 'text-slate-300'}>{valB || '-'}</span>
                             {(valA > 0 || valB > 0) && <TrendIcon a={valA} b={valB} isClosed={opt === XStatus.CLOSED} />}
                           </div>
                         </td>
                       </React.Fragment>
                     );
                   })}
-                  <td className="px-2 py-4 border-r text-center font-black text-slate-400">{row.dataA.total}</td>
-                  <td className="px-2 py-4 text-center font-black text-indigo-700 bg-indigo-50/20">
+                  <td className="px-2 py-4 border-r border-slate-100 text-center font-black text-slate-500">{row.dataA.total}</td>
+                  <td className="px-2 py-4 text-center font-black text-indigo-700 bg-indigo-50/30">
                     <div className="flex items-center justify-center gap-1.5">
-                      {row.dataB.total}
+                      <span className="text-sm font-black">{row.dataB.total}</span>
                       {(row.dataA.total > 0 || row.dataB.total > 0) && <TrendIcon a={row.dataA.total} b={row.dataB.total} isClosed={false} />}
                     </div>
                   </td>
@@ -426,20 +489,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
                     const sumB = (totalsCompare.dataB as Record<string, number>)[opt];
                     return (
                       <React.Fragment key={`total-${opt}`}>
-                        <td className="px-2 py-6 border-r border-slate-800 text-center opacity-40">{sumA}</td>
-                        <td className="px-2 py-6 border-r border-slate-800 text-center">
+                        <td className="px-2 py-6 border-r border-slate-800 text-center opacity-60">{sumA}</td>
+                        <td className="px-2 py-6 border-r border-slate-800 text-center bg-indigo-950/60 text-indigo-300">
                           <div className="flex items-center justify-center gap-2">
-                            {sumB}
+                            <span className="text-white text-sm">{sumB}</span>
                             <TrendIcon a={sumA} b={sumB} isClosed={opt === XStatus.CLOSED} />
                           </div>
                         </td>
                       </React.Fragment>
                     );
                   })}
-                  <td className="px-2 py-6 border-r border-slate-800 text-center opacity-40">{totalsCompare.dataA.total}</td>
-                  <td className="px-2 py-6 text-center bg-indigo-700 font-black">
+                  <td className="px-2 py-6 border-r border-slate-800 text-center opacity-60">{totalsCompare.dataA.total}</td>
+                  <td className="px-2 py-6 text-center bg-indigo-600 text-white font-black">
                     <div className="flex items-center justify-center gap-2">
-                      {totalsCompare.dataB.total}
+                      <span className="text-base font-black">{totalsCompare.dataB.total}</span>
                       <TrendIcon a={totalsCompare.dataA.total} b={totalsCompare.dataB.total} isClosed={false} />
                     </div>
                   </td>
