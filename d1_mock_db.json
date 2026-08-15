@@ -1,0 +1,114 @@
+{
+  "users": [
+    {
+      "uid": "admin-id",
+      "email": "cyber.kan587@gmail.com",
+      "display_name": "Administrateur",
+      "role": "Admin",
+      "password": "admin"
+    }
+  ],
+  "pm_assignments": [
+    {
+      "id": "row-01",
+      "site_code": "SITE_DK_01",
+      "pm_number": "PM-2026-1001",
+      "site_name": "Site Dakar Plateau",
+      "region": "DAKAR",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Trimestrielle",
+      "technician_name": "Ibrahima Ndiaye",
+      "executed_date": "2026-07-23",
+      "reprogrammed_date": "",
+      "status": "Exécuté",
+      "comments": ""
+    },
+    {
+      "id": "row-02",
+      "site_code": "SITE_TH_02",
+      "pm_number": "PM-2026-1002",
+      "site_name": "Site Thiès Gare",
+      "region": "THIES",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Semestrielle",
+      "technician_name": "Moustapha Diop",
+      "executed_date": "",
+      "reprogrammed_date": "",
+      "status": "Planifié",
+      "comments": ""
+    },
+    {
+      "id": "row-03",
+      "site_code": "SITE_SL_03",
+      "pm_number": "PM-2026-1003",
+      "site_name": "Site Saint-Louis Nord",
+      "region": "SAINT-LOUIS",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Annuelle",
+      "technician_name": "Amadou Sow",
+      "executed_date": "",
+      "reprogrammed_date": "2026-07-25",
+      "status": "Replanifié",
+      "comments": ""
+    },
+    {
+      "id": "row-04",
+      "site_code": "SITE_ZG_04",
+      "pm_number": "PM-2026-1004",
+      "site_name": "Site Ziguinchor Centre",
+      "region": "ZIGUINCHOR",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Mensuelle",
+      "technician_name": "Fatou Fall",
+      "executed_date": "",
+      "reprogrammed_date": "",
+      "status": "En retard",
+      "comments": ""
+    },
+    {
+      "id": "pm-yz4ygbp",
+      "site_code": "TEST01",
+      "pm_number": "PM-TEST",
+      "site_name": "Test Site",
+      "region": "TEST",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Test",
+      "technician_name": "Tester",
+      "executed_date": "",
+      "reprogrammed_date": "",
+      "status": "Planifié",
+      "comments": ""
+    },
+    {
+      "id": "pm-vm2om0r",
+      "site_code": "TEST01",
+      "pm_number": "PM-TEST2",
+      "site_name": "Test Site",
+      "region": "TEST",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Test",
+      "technician_name": "Tester",
+      "executed_date": "",
+      "reprogrammed_date": "",
+      "status": "Planifié",
+      "comments": ""
+    }
+  ],
+  "daily_raw_data": [
+    {
+      "id": "raw-8nlg7ie",
+      "site_code": "TEST01",
+      "pm_number": "PM-TEST-DAILY",
+      "site_name": "Test Site",
+      "region": "TEST",
+      "planned_date": "2026-07-23",
+      "maintenance_type": "Test",
+      "technician_name": "Tester",
+      "executed_date": "",
+      "reprogrammed_date": "",
+      "status": "Planifié",
+      "comments": "",
+      "imported_at": "2026-07-23T21:46:52.821Z"
+    }
+  ]
+}

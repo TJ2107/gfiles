@@ -1,0 +1,31 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B3D91"/>
+      <stop offset="100%" stop-color="#1E6FEB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- fond blanc avec coins arrondis (style app icon) -->
+  <rect width="200" height="200" rx="36" fill="#FFFFFF"/>
+
+  <g transform="translate(20,30)">
+    <!-- dossier stylisé -->
+    <path d="M0 40 L0 130 Q0 140 10 140 L150 140 Q160 140 160 130 L160 55 Q160 45 150 45 L85 45 L70 25 L10 25 Q0 25 0 35 Z"
+          fill="url(#blueGrad)"/>
+    <!-- languette du dossier -->
+    <rect x="0" y="35" width="70" height="12" rx="4" fill="#0B3D91"/>
+
+    <!-- globe superposé -->
+    <circle cx="90" cy="90" r="58" fill="#FFFFFF" stroke="url(#blueGrad)" stroke-width="6"/>
+
+    <!-- méridiens -->
+    <ellipse cx="90" cy="90" rx="24" ry="58" fill="none" stroke="url(#blueGrad)" stroke-width="3"/>
+    <ellipse cx="90" cy="90" rx="58" ry="24" fill="none" stroke="url(#blueGrad)" stroke-width="3"/>
+    <line x1="32" y1="90" x2="148" y2="90" stroke="url(#blueGrad)" stroke-width="3"/>
+    <line x1="90" y1="32" x2="90" y2="148" stroke="url(#blueGrad)" stroke-width="3"/>
+
+    <!-- point central -->
+    <circle cx="90" cy="90" r="6" fill="url(#blueGrad)"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "sthic-pm-tracker"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+[assets]
+directory = "./dist"
+
+[vars]
+RETABLE_API_KEY = "Si6JXVXPpNJ1xS7-IfS43OJUfrzlGUqeXY-A-IhFHHCnKwMVgF5xKfAn-dBZTGKM"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sthic_pm_db"
+database_id = "a0186e6c-0ec3-45e3-bb1e-54dac328e1a0"
+

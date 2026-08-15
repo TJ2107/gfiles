@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "SwoData": {
+      "title": "SwoData",
+      "description": "Represents a single row from the Excel global files import.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nom_du_site": { "type": "string" },
+        "region": { "type": "string" },
+        "swo_number": { "type": "string" },
+        "priorite": { "type": "string" },
+        "assigned_to": { "type": "string" },
+        "status": { "type": "string" },
+        "date_creation": { "type": "string" },
+        "project_id": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["project_id"]
+    },
+    "ManualComment": {
+      "title": "ManualComment",
+      "description": "Manual comments added per site and category.",
+      "type": "object",
+      "properties": {
+        "site_id": { "type": "string" },
+        "category": { "type": "string" },
+        "comment": { "type": "string" },
+        "updated_at": { "type": "number" }
+      },
+      "required": ["site_id", "category"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Represents a registered user with a specific role in the application.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["User", "Manager", "Admin"] },
+        "createdAt": { "type": "integer" }
+      },
+      "required": ["email", "name", "role", "createdAt"]
+    },
+    "Presence": {
+      "title": "Presence",
+      "description": "Represents a user's real-time active session and module.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "module": { "type": "string" },
+        "lastActive": { "type": "number" }
+      },
+      "required": ["userId", "email", "name", "module", "lastActive"]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}/swo_data/{rowId}": {
+      "schema": { "$ref": "#/entities/SwoData" },
+      "description": "Global file records"
+    },
+    "/projects/{projectId}/manual_comments/{commentId}": {
+      "schema": { "$ref": "#/entities/ManualComment" },
+      "description": "Persistent manual comments for sites"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User role management and profile"
+    },
+    "/presence/{userId}": {
+      "schema": { "$ref": "#/entities/Presence" },
+      "description": "User real-time presence and active module"
+    }
+  }
+}
