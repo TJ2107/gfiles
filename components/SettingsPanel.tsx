@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings, Save, UserPlus, AlertTriangle, Trash2, Sun, Moon, Loader2,
   Sliders, Shield, Users, Database, Battery, Settings2, CheckCircle, Key, Mail, User, Info, AlertCircle, Activity, Monitor,
-  Bell, Sparkles, Wrench
+  Bell, Sparkles, Wrench, UserCheck, XCircle, Check, RefreshCw
 } from 'lucide-react';
 import { GlobalFileRow } from '../types';
-import { registerUserWithoutLoggingIn, subscribeToPresence, UserPresence } from '../firebase';
+import { 
+  registerUserWithoutLoggingIn, 
+  subscribeToPresence, 
+  UserPresence, 
+  AuthUser, 
+  fetchAllUsers, 
+  subscribeToUsers,
+  updateUserStatusAndRole, 
+  deleteUserAccount 
+} from '../firebase';
 import { clearFirebaseData } from '../firebaseData';
 
 const getModuleLabel = (moduleKey: string) => {
@@ -69,12 +78,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   versionAnnounceActive = true,
   setVersionAnnounceActive
 }) => {
-  const [activeTab, setActiveTab] = useState<'config' | 'users' | 'connected' | 'danger'>('config');
+  const isAdmin = userRole === 'Admin';
+  const [activeTab, setActiveTab] = useState<'config' | 'users' | 'approvals' | 'connected' | 'danger'>('config');
   const [battery, setBattery] = useState(initialBatteryThreshold);
   const [belt, setBelt] = useState(initialBeltThreshold);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
   const [presences, setPresences] = useState<UserPresence[]>([]);
   const [, setTick] = useState(0);
+
+  // User management & approvals states
+  const [userList, setUserList] = useState<AuthUser[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [userActionMessage, setUserActionMessage] = useState('');
+  const [pendingApprovalRoles, setPendingApprovalRoles] = useState<Record<string, 'User' | 'Manager' | 'Admin'>>({});
+  const [userToConfirm, setUserToConfirm] = useState<{ user: AuthUser; type: 'reject' | 'delete' } | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
 
   // Cloudflare D1 status & bypass states
   const [d1Status, setD1Status] = useState<'checking' | 'online' | 'offline'>('checking');
@@ -179,6 +197,85 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setShowSaveMessage(true);
   };
 
+  // Load users for admin management and approvals
+  const loadUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const users = await fetchAllUsers();
+      setUserList(users);
+    } catch (e) {
+      console.error("Failed to load users", e);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsubscribe = subscribeToUsers((users) => {
+      setUserList(users);
+      setIsLoadingUsers(false);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [isAdmin]);
+
+  const handleApproveUser = async (user: AuthUser, chosenRole?: 'User' | 'Manager' | 'Admin') => {
+    const roleToAssign = chosenRole || pendingApprovalRoles[user.uid] || user.role || 'User';
+    setUserActionMessage(`Validation de ${user.displayName || user.email}...`);
+    try {
+      await updateUserStatusAndRole(user.uid, roleToAssign, 'approved', user.email);
+      setUserList(prev => prev.map(u => (u.uid === user.uid || (u.email && u.email.toLowerCase() === user.email?.toLowerCase())) ? { ...u, role: roleToAssign, status: 'approved' } : u));
+      setUserActionMessage(`✅ Compte de "${user.displayName || user.email}" validé avec le rôle ${roleToAssign}.`);
+      setTimeout(() => setUserActionMessage(''), 4500);
+    } catch (e) {
+      console.error(e);
+      setUserActionMessage(`❌ Erreur lors de la validation du compte.`);
+    }
+  };
+
+  const handlePromptReject = (user: AuthUser) => {
+    setUserToConfirm({ user, type: 'reject' });
+  };
+
+  const handlePromptDelete = (user: AuthUser) => {
+    setUserToConfirm({ user, type: 'delete' });
+  };
+
+  const handleExecuteUserConfirm = async () => {
+    if (!userToConfirm) return;
+    const { user, type } = userToConfirm;
+    setIsDeletingUser(true);
+    try {
+      await deleteUserAccount(user.uid, user.email);
+      setUserList(prev => prev.filter(u => u.uid !== user.uid && (!u.email || !user.email || u.email.toLowerCase() !== user.email.toLowerCase())));
+      if (type === 'reject') {
+        setUserActionMessage(`✅ Demande de "${user.displayName || user.email}" refusée et supprimée.`);
+      } else {
+        setUserActionMessage(`✅ Compte de "${user.displayName || user.email}" supprimé avec succès.`);
+      }
+      setTimeout(() => setUserActionMessage(''), 4500);
+      setUserToConfirm(null);
+    } catch (e) {
+      console.error("Delete user execution error:", e);
+      setUserActionMessage(`❌ Erreur lors de la suppression.`);
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
+  const handleUpdateRole = async (user: AuthUser, newRole: 'User' | 'Manager' | 'Admin') => {
+    try {
+      await updateUserStatusAndRole(user.uid, newRole, user.status || 'approved', user.email);
+      setUserList(prev => prev.map(u => (u.uid === user.uid || (u.email && u.email.toLowerCase() === user.email?.toLowerCase())) ? { ...u, role: newRole } : u));
+      setUserActionMessage(`Rôle de ${user.displayName || user.email} modifié en ${newRole}.`);
+      setTimeout(() => setUserActionMessage(''), 4000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddUserError('');
@@ -186,14 +283,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setIsSubmittingUser(true);
 
     try {
-      await registerUserWithoutLoggingIn(newUserEmail, newUserPass, newUserName, newUserRole);
+      await registerUserWithoutLoggingIn(newUserEmail, newUserPass, newUserName, newUserRole, 'approved');
 
-      setAddUserSuccess(`L'utilisateur "${newUserName}" a été enregistré avec succès et a reçu le rôle d'accès "${newUserRole}".`);
+      setAddUserSuccess(`L'utilisateur "${newUserName}" a été créé et approuvé avec succès avec le rôle "${newUserRole}".`);
       setNewUserName('');
       setNewUserEmail('');
       setNewUserPass('');
       setNewUserRole('User');
       setIsAddingUser(false);
+      loadUsers();
     } catch (err: unknown) {
       console.error(err);
       const error = err as { code?: string };
@@ -230,7 +328,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
-  const isAdmin = userRole === 'Admin';
+  const pendingUsersCount = userList.filter(u => u.status === 'pending').length;
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -245,7 +343,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
               Paramètres <span className="text-indigo-600">Système</span>
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Configurez les variables d'analyse, gérez les autorisations d'équipe et purgez les jeux de données.</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Configurez les variables d'analyse, validez les nouveaux utilisateurs et gérez les autorisations d'accès.</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 p-2 rounded-xl self-start md:self-auto shrink-0">
@@ -276,6 +374,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <Sliders className="w-4 h-4" />
                   <span>Configuration générale</span>
                 </button>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => setActiveTab('approvals')}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                      activeTab === 'approvals'
+                        ? 'bg-slate-950 text-indigo-400 dark:bg-slate-800 border-l-[3px] border-indigo-500 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/30'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <UserCheck className="w-4 h-4 text-amber-500" />
+                      <span>Validation Inscriptions</span>
+                    </div>
+                    {pendingUsersCount > 0 && (
+                      <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-slate-950 animate-pulse">
+                        {pendingUsersCount}
+                      </span>
+                    )}
+                  </button>
+                )}
                 
                 {isAdmin && (
                   <button
@@ -287,7 +406,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     }`}
                   >
                     <Users className="w-4 h-4" />
-                    <span>Comptes d'Équipe</span>
+                    <span>Gestion des Rôles & Comptes</span>
                   </button>
                 )}
 
@@ -341,6 +460,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </button>
                 {isAdmin && (
                   <button
+                    onClick={() => setActiveTab('approvals')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer relative ${
+                      activeTab === 'approvals'
+                        ? 'bg-white dark:bg-slate-900 text-amber-500 shadow-sm border border-slate-200/40 dark:border-slate-800/60'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Validation</span>
+                    {pendingUsersCount > 0 && (
+                      <span className="px-1.5 py-0.2 text-[9px] font-black rounded-full bg-amber-500 text-slate-950">
+                        {pendingUsersCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
                     onClick={() => setActiveTab('users')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                       activeTab === 'users'
@@ -349,7 +486,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     }`}
                   >
                     <Users className="w-3.5 h-3.5" />
-                    <span>Utilisateurs</span>
+                    <span>Comptes</span>
                   </button>
                 )}
                 <button
@@ -385,12 +522,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <div className="lg:col-span-3">
           
           {/* Subheader Title */}
-          <div className="mb-4 sm:mb-5">
+          <div className="mb-4 sm:mb-5 flex items-center justify-between">
             <h3 className="text-xs sm:text-sm font-bold text-slate-950 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2">
               {activeTab === 'config' && (
                 <>
                   <Sliders className="w-4 h-4 text-indigo-500 shrink-0" />
                   <span>Seuils Analytiques & Préférences visuelles</span>
+                </>
+              )}
+              {activeTab === 'approvals' && (
+                <>
+                  <UserCheck className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Validation & Approbation des Inscriptions</span>
                 </>
               )}
               {activeTab === 'users' && (
@@ -412,6 +555,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </>
               )}
             </h3>
+            {(activeTab === 'approvals' || activeTab === 'users') && (
+              <button
+                onClick={loadUsers}
+                disabled={isLoadingUsers}
+                className="text-xs font-semibold text-slate-500 hover:text-indigo-500 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors"
+                title="Actualiser la liste"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsers ? 'animate-spin text-indigo-500' : ''}`} />
+                <span className="hidden sm:inline">Actualiser</span>
+              </button>
+            )}
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-sm min-h-[380px] flex flex-col justify-between">
@@ -772,14 +926,134 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
             )}
 
-            {/* TAB 2: USER MANAGEMENT */}
+            {/* TAB: APPROVALS & REGISTRATION VALIDATION */}
+            {isAdmin && activeTab === 'approvals' && (
+              <div className="space-y-6 w-full animate-in fade-in duration-300">
+                {userActionMessage && (
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <Info className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <span>{userActionMessage}</span>
+                  </div>
+                )}
+
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-amber-500 shrink-0" />
+                      Inscriptions en attente de validation
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Pour garantir la sécurité et la qualification des intervenants, chaque nouvelle création de compte nécessite la validation d'un administrateur ainsi que l'attribution d'un rôle d'accès.
+                    </p>
+                  </div>
+                  
+                  <div className="px-3 py-1.5 bg-amber-500/20 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-black self-start sm:self-auto flex items-center gap-2 shrink-0">
+                    <span>{pendingUsersCount} en attente</span>
+                  </div>
+                </div>
+
+                <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-900/40">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                          <th className="p-4">Demandeur / Identité</th>
+                          <th className="p-4">Email</th>
+                          <th className="p-4">Rôle à attribuer</th>
+                          <th className="p-4 text-right">Actions de validation</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                        {isLoadingUsers ? (
+                          <tr>
+                            <td colSpan={4} className="p-8 text-center text-slate-400">
+                              <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500 mb-2" />
+                              <span>Chargement des demandes d'inscription...</span>
+                            </td>
+                          </tr>
+                        ) : userList.filter(u => u.status === 'pending').length > 0 ? (
+                          userList.filter(u => u.status === 'pending').map((pendingUser) => (
+                            <tr key={pendingUser.uid} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
+                              <td className="p-4 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center uppercase border border-amber-500/20 shrink-0">
+                                  {pendingUser.displayName ? pendingUser.displayName[0] : (pendingUser.email ? pendingUser.email[0] : 'U')}
+                                </div>
+                                <div>
+                                  <p className="font-extrabold text-slate-900 dark:text-slate-100">{pendingUser.displayName || "Nouvel Utilisateur"}</p>
+                                  <span className="inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                    En attente d'approbation
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
+                                {pendingUser.email}
+                              </td>
+                              <td className="p-4">
+                                <select
+                                  value={pendingApprovalRoles[pendingUser.uid] || pendingUser.role || 'User'}
+                                  onChange={(e) => {
+                                    const r = e.target.value as 'User' | 'Manager' | 'Admin';
+                                    setPendingApprovalRoles(prev => ({ ...prev, [pendingUser.uid]: r }));
+                                  }}
+                                  className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:border-indigo-500"
+                                >
+                                  <option value="User">Utilisateur (Lecteur)</option>
+                                  <option value="Manager">Manager (Superviseur)</option>
+                                  <option value="Admin">Administrateur</option>
+                                </select>
+                              </td>
+                              <td className="p-4 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => handleApproveUser(pendingUser)}
+                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Valider l'accès</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handlePromptReject(pendingUser)}
+                                    className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                                    title="Refuser et supprimer la demande"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    <span>Refuser</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="p-8 text-center text-slate-400 dark:text-slate-500">
+                              <CheckCircle className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
+                              <p className="font-bold text-slate-700 dark:text-slate-300">Toutes les demandes ont été traitées</p>
+                              <p className="text-[10px] mt-0.5">Aucun nouvel utilisateur en attente de qualification actuellement.</p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: USER MANAGEMENT & ACTIVE ACCOUNTS */}
             {isAdmin && activeTab === 'users' && (
-              <div className="space-y-6 w-full">
+              <div className="space-y-6 w-full animate-in fade-in duration-300">
                 
                 {addUserSuccess && (
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in slide-in-from-top-2 duration-200 animate-pulse">
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
                     <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                     <span>{addUserSuccess}</span>
+                  </div>
+                )}
+
+                {userActionMessage && (
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-semibold flex items-center gap-2">
+                    <Info className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <span>{userActionMessage}</span>
                   </div>
                 )}
 
@@ -789,7 +1063,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div className="md:col-span-5 bg-slate-50 dark:bg-slate-950/40 p-4 sm:p-5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 space-y-4">
                     <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                       <Shield className="w-3.5 h-3.5 text-indigo-500" />
-                      Rôles disponibles
+                      Rôles disponibles & Privilèges
                     </h4>
                     
                     <div className="space-y-4 text-[11px] leading-relaxed">
@@ -805,20 +1079,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
                       <div className="border-l-2 border-indigo-600 pl-3">
                         <span className="font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">Administrateur</span>
-                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Privilèges totaux incluant la gestion d'équipe et la purge irréversible des données de production.</p>
+                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Privilèges totaux incluant la validation d'inscriptions, la gestion d'équipe et la purge des données.</p>
                       </div>
-                    </div>
-
-                    <div className="p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10 flex items-start gap-2">
-                      <Info className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-indigo-500 leading-normal font-medium">Les utilisateurs créés seront enregistrés en local pour cette instance.</p>
                     </div>
                   </div>
 
                   {/* Form section */}
                   <div className="md:col-span-7 space-y-4">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Créer un nouveau compte</h4>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Ajouter un utilisateur directement</h4>
                       <button 
                         onClick={() => setIsAddingUser(!isAddingUser)}
                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-colors shrink-0 ${
@@ -828,11 +1097,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }`}
                       >
                         <UserPlus className="w-3.5 h-3.5" />
-                        <span>{isAddingUser ? 'Annuler' : 'Ajouter'}</span>
+                        <span>{isAddingUser ? 'Annuler' : 'Créer un compte validé'}</span>
                       </button>
                     </div>
 
-                    {isAddingUser ? (
+                    {isAddingUser && (
                       <form onSubmit={handleAddUser} className="space-y-4 border border-indigo-500/10 dark:border-indigo-500/15 bg-indigo-500/5 p-4 sm:p-5 rounded-xl">
                         {addUserError && (
                           <div className="p-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-950 text-[11px] font-bold rounded-lg flex items-center gap-2 animate-shake">
@@ -910,19 +1179,109 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             disabled={isSubmittingUser}
                             className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg disabled:opacity-50 flex items-center justify-center cursor-pointer duration-200 active:scale-95"
                           >
-                            {isSubmittingUser ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Créer l\'utilisateur'}
+                            {isSubmittingUser ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Créer et approuver le compte'}
                           </button>
                         </div>
                       </form>
-                    ) : (
-                      <div className="border border-dashed border-slate-250 dark:border-slate-800 p-8 rounded-xl text-center flex flex-col items-center justify-center h-48">
-                        <Users className="w-8 h-8 text-indigo-400/40 mb-2 shrink-0" />
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Aucun compte actif généré</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Cliquez sur ajouter pour associer un nouvel agent d'analyse.</p>
-                      </div>
                     )}
                   </div>
 
+                </div>
+
+                {/* Table of all active approved users */}
+                <div className="mt-8 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Users className="w-4 h-4 text-indigo-500" />
+                    <span>Répertoire des Utilisateurs Actifs ({userList.filter(u => u.status === 'approved').length})</span>
+                  </h4>
+
+                  <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-900/40">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                            <th className="p-4">Utilisateur</th>
+                            <th className="p-4">Email</th>
+                            <th className="p-4">Rôle Attribué</th>
+                            <th className="p-4">Statut</th>
+                            <th className="p-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                          {isLoadingUsers ? (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-slate-400">
+                                <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500 mb-2" />
+                                <span>Chargement de la liste des utilisateurs...</span>
+                              </td>
+                            </tr>
+                          ) : userList.filter(u => u.status === 'approved').length > 0 ? (
+                            userList.filter(u => u.status === 'approved').map((user) => {
+                              const isSuperAdminUser = user.email?.toLowerCase() === 'cyber.kan587@gmail.com';
+                              return (
+                                <tr key={user.uid} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
+                                  <td className="p-4 flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center uppercase border border-indigo-500/20 shrink-0">
+                                      {user.displayName ? user.displayName[0] : (user.email ? user.email[0] : 'U')}
+                                    </div>
+                                    <div>
+                                      <p className="font-extrabold text-slate-900 dark:text-slate-100">{user.displayName || "Collaborateur"}</p>
+                                      {isSuperAdminUser && (
+                                        <span className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">Super Admin</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
+                                    {user.email}
+                                  </td>
+                                  <td className="p-4">
+                                    {isSuperAdminUser ? (
+                                      <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold">
+                                        Admin Principal
+                                      </span>
+                                    ) : (
+                                      <select
+                                        value={user.role || 'User'}
+                                        onChange={(e) => handleUpdateRole(user, e.target.value as 'User' | 'Manager' | 'Admin')}
+                                        className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:border-indigo-500"
+                                      >
+                                        <option value="User">Utilisateur (Lecteur)</option>
+                                        <option value="Manager">Manager (Superviseur)</option>
+                                        <option value="Admin">Administrateur</option>
+                                      </select>
+                                    )}
+                                  </td>
+                                  <td className="p-4">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-900/30">
+                                      <CheckCircle className="w-3 h-3" />
+                                      Approuvé
+                                    </span>
+                                  </td>
+                                  <td className="p-4 text-right">
+                                    {!isSuperAdminUser && (
+                                      <button
+                                        onClick={() => handlePromptDelete(user)}
+                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                                        title="Supprimer l'utilisateur"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-slate-400">
+                                Aucun utilisateur actif trouvé.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -1063,6 +1422,74 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
       </div>
+
+      {/* USER ACTION CONFIRMATION MODAL */}
+      {userToConfirm && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => !isDeletingUser && setUserToConfirm(null)}></div>
+          
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-5 sm:p-6 max-w-md w-full border border-slate-200/50 dark:border-slate-800/80 animate-in zoom-in-95 duration-200 z-10">
+            <h4 className="text-sm sm:text-md font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2 mb-3">
+              {userToConfirm.type === 'reject' ? (
+                <>
+                  <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                  <span>Refuser la demande d'inscription</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-5 h-5 text-rose-500 shrink-0" />
+                  <span>Supprimer l'accès utilisateur</span>
+                </>
+              )}
+            </h4>
+            
+            <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed mb-4">
+              {userToConfirm.type === 'reject' ? (
+                <>
+                  Êtes-vous sûr de vouloir rejeter et supprimer la demande d'inscription pour <strong className="text-slate-800 dark:text-slate-100 font-bold">"{userToConfirm.user.displayName || userToConfirm.user.email}"</strong> ({userToConfirm.user.email}) ?
+                </>
+              ) : (
+                <>
+                  Êtes-vous sûr de vouloir révoquer l'accès et supprimer définitivement le compte de <strong className="text-slate-800 dark:text-slate-100 font-bold">"{userToConfirm.user.displayName || userToConfirm.user.email}"</strong> ({userToConfirm.user.email}) ?
+                </>
+              )}
+            </p>
+
+            <div className="flex gap-2 justify-end mt-6">
+              <button
+                disabled={isDeletingUser}
+                onClick={() => setUserToConfirm(null)}
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg transition text-xs cursor-pointer"
+              >
+                Annuler
+              </button>
+              
+              <button
+                disabled={isDeletingUser}
+                onClick={handleExecuteUserConfirm}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg transition flex items-center justify-center gap-1.5 text-xs cursor-pointer shadow-md shadow-rose-600/15"
+              >
+                {isDeletingUser ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Traitement en cours...</span>
+                  </>
+                ) : userToConfirm.type === 'reject' ? (
+                  <>
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Oui, refuser</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Oui, supprimer</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (

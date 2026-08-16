@@ -146,15 +146,17 @@ async function startServer() {
     res.json({ status: 'ok', database: 'Firebase/D1 Local' });
   });
 
-  // A. GET /api/auth/users (Fetch all registered users)
+  // A. GET /api/auth/users (Fetch all registered users with status)
   app.get('/api/auth/users', (req, res) => {
     try {
       const db = readMockDb();
-      const users = db.users.map((u: any) => ({
+      const users = (db.users || []).map((u: any) => ({
         uid: u.uid,
         email: u.email,
         displayName: u.display_name,
-        role: u.role
+        role: u.role || 'User',
+        status: u.status || (u.email.toLowerCase() === 'cyber.kan587@gmail.com' ? 'approved' : 'pending'),
+        createdAt: u.createdAt || Date.now()
       }));
       res.json({ success: true, users });
     } catch (e: any) {
@@ -162,25 +164,44 @@ async function startServer() {
     }
   });
 
-  // B. POST /api/auth/login (Verify login against database)
+  // B. POST /api/auth/login (Verify login against database and check approval status)
   app.post('/api/auth/login', (req, res) => {
     try {
       const { email, password } = req.body;
       const db = readMockDb();
-      const user = db.users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
+      const user = (db.users || []).find((u: any) => u.email.toLowerCase() === email.toLowerCase());
       if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé dans la base de données locale." });
+        return res.status(404).json({ error: "Utilisateur non trouvé dans la base de données." });
       }
-      if (user.password !== password) {
+      if (user.password && user.password !== password) {
         return res.status(401).json({ error: "Mot de passe incorrect." });
       }
+
+      const isSuperAdmin = user.email.toLowerCase() === 'cyber.kan587@gmail.com';
+      const userStatus = user.status || (isSuperAdmin ? 'approved' : 'pending');
+
+      if (userStatus === 'pending') {
+        return res.status(403).json({ 
+          error: "Votre compte est en attente de validation par l'administrateur. Veuillez patienter que votre accès et rôle soient validés.",
+          isPending: true
+        });
+      }
+
+      if (userStatus === 'rejected') {
+        return res.status(403).json({ 
+          error: "Votre demande d'inscription a été rejetée ou désactivée par l'administrateur.",
+          isRejected: true
+        });
+      }
+
       res.json({
         success: true,
         user: {
           uid: user.uid,
           email: user.email,
           displayName: user.display_name,
-          role: user.role
+          role: user.role || 'User',
+          status: userStatus
         }
       });
     } catch (e: any) {
@@ -188,34 +209,134 @@ async function startServer() {
     }
   });
 
-  // C. POST /api/auth/register (Create new user in database)
+  // C. POST /api/auth/register (Create or update user in database with status)
   app.post('/api/auth/register', (req, res) => {
     try {
-      const { email, password, displayName, role } = req.body;
+      const { email, password, displayName, role, status: reqStatus, uid: customUid } = req.body;
       const db = readMockDb();
-      const existing = db.users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      if (existing) {
-        return res.status(400).json({ error: "Cet email est déjà utilisé." });
+      if (!db.users) db.users = [];
+      const userIndex = db.users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
+      
+      const isSuperAdmin = email.toLowerCase() === 'cyber.kan587@gmail.com';
+      const status = isSuperAdmin ? 'approved' : (reqStatus || 'pending');
+      const userRole = isSuperAdmin ? 'Admin' : (role || 'User');
+      const uid = customUid || (userIndex > -1 ? db.users[userIndex].uid : (email.replace(/[^a-zA-Z0-9]/g, '_') || 'user-' + Math.random().toString(36).substring(2, 11)));
+
+      if (userIndex > -1) {
+        db.users[userIndex].display_name = displayName || db.users[userIndex].display_name;
+        db.users[userIndex].role = isSuperAdmin ? 'Admin' : (role || db.users[userIndex].role);
+        db.users[userIndex].status = isSuperAdmin ? 'approved' : (reqStatus || db.users[userIndex].status);
+        if (password) db.users[userIndex].password = password;
+      } else {
+        const newUser = {
+          uid,
+          email,
+          display_name: displayName || email.split('@')[0],
+          role: userRole,
+          status,
+          password: password || 'default',
+          createdAt: Date.now()
+        };
+        db.users.push(newUser);
       }
-      const uid = 'user-' + Math.random().toString(36).substring(2, 11);
-      const newUser = {
-        uid,
-        email,
-        display_name: displayName,
-        role: role || 'User',
-        password
-      };
-      db.users.push(newUser);
+
       writeMockDb(db);
       res.json({
         success: true,
         user: {
           uid,
           email,
-          displayName,
-          role: role || 'User'
+          displayName: displayName || (userIndex > -1 ? db.users[userIndex].display_name : email.split('@')[0]),
+          role: isSuperAdmin ? 'Admin' : (role || (userIndex > -1 ? db.users[userIndex].role : 'User')),
+          status: isSuperAdmin ? 'approved' : (reqStatus || (userIndex > -1 ? db.users[userIndex].status : 'pending'))
         }
       });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // C.2 PUT /api/auth/users/:uid (Admin updates user role and status: approve / reject / change role)
+  app.put('/api/auth/users/:uid', (req, res) => {
+    try {
+      const rawUid = req.params.uid;
+      const uid = decodeURIComponent(rawUid);
+      const { role, status, displayName } = req.body;
+      const db = readMockDb();
+      if (!db.users) db.users = [];
+      const userIndex = db.users.findIndex((u: any) => 
+        u.uid === uid || 
+        u.email?.toLowerCase() === uid.toLowerCase() || 
+        u.email?.replace(/[^a-zA-Z0-9]/g, '_') === uid
+      );
+      if (userIndex === -1) {
+        // If not found yet in mock db, create the user record with the updated info
+        const isSuperAdmin = uid.toLowerCase() === 'cyber.kan587@gmail.com';
+        const newRecord = {
+          uid: uid.includes('@') ? uid.replace(/[^a-zA-Z0-9]/g, '_') : uid,
+          email: uid.includes('@') ? uid : `${uid}@local.domain`,
+          display_name: displayName || uid.split('@')[0],
+          role: isSuperAdmin ? 'Admin' : (role || 'User'),
+          status: isSuperAdmin ? 'approved' : (status || 'approved'),
+          password: 'default',
+          createdAt: Date.now()
+        };
+        db.users.push(newRecord);
+        writeMockDb(db);
+        return res.json({ success: true, user: newRecord });
+      }
+
+      const isSuperAdmin = db.users[userIndex].email.toLowerCase() === 'cyber.kan587@gmail.com';
+      
+      if (role && !isSuperAdmin) {
+        db.users[userIndex].role = role;
+      }
+      if (status && !isSuperAdmin) {
+        db.users[userIndex].status = status;
+      }
+      if (displayName) {
+        db.users[userIndex].display_name = displayName;
+      }
+
+      writeMockDb(db);
+      res.json({
+        success: true,
+        user: {
+          uid: db.users[userIndex].uid,
+          email: db.users[userIndex].email,
+          displayName: db.users[userIndex].display_name,
+          role: db.users[userIndex].role,
+          status: db.users[userIndex].status
+        }
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // C.3 DELETE /api/auth/users/:uid (Admin deletes user)
+  app.delete('/api/auth/users/:uid', (req, res) => {
+    try {
+      const rawUid = req.params.uid;
+      const uid = decodeURIComponent(rawUid);
+      const db = readMockDb();
+      if (!db.users) db.users = [];
+      const userIndex = db.users.findIndex((u: any) => 
+        u.uid === uid || 
+        u.email?.toLowerCase() === uid.toLowerCase() || 
+        u.email?.replace(/[^a-zA-Z0-9]/g, '_') === uid
+      );
+      if (userIndex === -1) {
+        return res.json({ success: true, message: "User deleted or not present" });
+      }
+
+      if (db.users[userIndex].email.toLowerCase() === 'cyber.kan587@gmail.com') {
+        return res.status(400).json({ error: "Impossible de supprimer le compte Super Administrateur." });
+      }
+
+      db.users.splice(userIndex, 1);
+      writeMockDb(db);
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }

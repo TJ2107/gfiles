@@ -8,19 +8,32 @@ export const LoginView: React.FC = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [successInfo, setSuccessInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessInfo("");
     setIsLoading(true);
 
     try {
       if (isRegistering) {
-        const defaultRole =
-          email.toLowerCase() === "cyber.kan587@gmail.com" ? "Admin" : "User";
-        await registerUserWithoutLoggingIn(email, password, name, defaultRole);
-        await loginWithEmail(email, password);
+        const isSuperAdmin = email.toLowerCase() === "cyber.kan587@gmail.com";
+        const defaultRole = isSuperAdmin ? "Admin" : "User";
+        const defaultStatus = isSuperAdmin ? "approved" : "pending";
+
+        await registerUserWithoutLoggingIn(email, password, name, defaultRole, defaultStatus);
+
+        if (isSuperAdmin) {
+          await loginWithEmail(email, password);
+        } else {
+          setSuccessInfo(
+            "Votre demande d'inscription a été transmise avec succès ! Un administrateur doit valider votre compte et vous attribuer votre rôle avant que vous puissiez vous connecter."
+          );
+          setIsRegistering(false);
+          setPassword("");
+        }
       } else {
         await loginWithEmail(email, password);
       }
@@ -120,6 +133,17 @@ export const LoginView: React.FC = () => {
             Authentification sécurisée requise
           </p>
         </div>
+
+        {successInfo && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-4 rounded-xl mb-6 text-xs leading-relaxed flex items-start gap-3 animate-in fade-in">
+            <div className="mt-0.5 text-emerald-400">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span>{successInfo}</span>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl mb-6 text-sm flex items-start gap-3">

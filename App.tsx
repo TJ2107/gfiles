@@ -375,7 +375,7 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
-  const NavButton = ({ id, label, icon: Icon, colorClass, isNew }: { id: string, label: string, icon: React.ElementType, colorClass?: string, isNew?: boolean }) => {
+  const NavButton = ({ id, label, icon: Icon, colorClass, isNew, iconBg }: { id: string, label: string, icon: React.ElementType, colorClass?: string, isNew?: boolean, iconBg?: string }) => {
     const isActive = activeTab === id;
     return (
       <button
@@ -387,13 +387,13 @@ const App: React.FC = () => {
         }`}
       >
         <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="relative flex items-center justify-center">
-            <Icon className={`w-[18px] h-[18px] transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
-            {isNew && !isActive && <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-ping"></span>}
+          <div className={`relative flex items-center justify-center p-2 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] bg-gradient-to-br ${iconBg || 'from-indigo-600 to-violet-700'} border border-white/20 group-hover:scale-110 transition-transform`}>
+            <Icon className="w-4 h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
+            {isNew && !isActive && <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5 rounded-full bg-indigo-300 animate-ping"></span>}
           </div>
           {!isSidebarCollapsed && <span className="truncate">{label}</span>}
         </div>
-        {!isSidebarCollapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-indigo-500" />}
+        {!isSidebarCollapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />}
         {!isSidebarCollapsed && isActive && <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-indigo-500 rounded-full"></span>}
       </button>
     );
@@ -595,23 +595,23 @@ const App: React.FC = () => {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 space-y-1 custom-scrollbar">
-            {isAdmin && <NavButton id="upload" label="Import Excel" icon={Database} />}
+            {isAdmin && <NavButton id="upload" label="Import Excel" icon={Database} iconBg="from-amber-500 to-orange-600" />}
             {data.length > 0 && (
               <>
                 {isAdmin && <div className="h-px bg-slate-900/80 my-2 mx-2"></div>}
-                <NavButton id="dashboard" label="Analyses Globales" icon={PieChart} />
-                <NavButton id="rapport" label="Rapport d'Activité" icon={BarChart3} colorClass="bg-slate-900 text-indigo-400 border border-slate-800/80" isNew={true} />
-                <NavButton id="data" label="Row Data" icon={Layout} />
-                <NavButton id="daily" label="Daily Status" icon={Calendar} />
-                <NavButton id="ttf" label="Analyse TTF" icon={Timer} />
-                <NavButton id="gm" label="Feuille GM" icon={Briefcase} />
-                <NavButton id="tas" label="Analyse TAS" icon={ClipboardList} />
-                <NavButton id="fe_module" label="Module FE" icon={Users} />
-                <NavButton id="battery" label="Parc Batteries" icon={Battery} />
-                <NavButton id="belt" label="Audit Courroies" icon={Settings2} />
+                <NavButton id="dashboard" label="Analyses Globales" icon={PieChart} iconBg="from-blue-600 to-indigo-700" />
+                <NavButton id="rapport" label="Rapport d'Activité" icon={BarChart3} colorClass="bg-slate-900 text-indigo-400 border border-slate-800/80" isNew={true} iconBg="from-purple-600 to-pink-600" />
+                <NavButton id="data" label="Row Data" icon={Layout} iconBg="from-emerald-600 to-teal-700" />
+                <NavButton id="daily" label="Daily Status" icon={Calendar} iconBg="from-cyan-600 to-blue-600" />
+                <NavButton id="ttf" label="Analyse TTF" icon={Timer} iconBg="from-rose-600 to-red-700" />
+                <NavButton id="gm" label="Feuille GM" icon={Briefcase} iconBg="from-violet-600 to-purple-700" />
+                <NavButton id="tas" label="Analyse TAS" icon={ClipboardList} iconBg="from-amber-600 to-yellow-600" />
+                <NavButton id="fe_module" label="Module FE" icon={Users} iconBg="from-indigo-600 to-blue-700" />
+                <NavButton id="battery" label="Parc Batteries" icon={Battery} iconBg="from-emerald-500 to-green-700" />
+                <NavButton id="belt" label="Audit Courroies" icon={Settings2} iconBg="from-slate-600 to-slate-800" />
                 <div className="h-px bg-slate-900/80 my-3 mx-2"></div>
-                <NavButton id="export" label="Pôle d'Exportation" icon={Download} />
-                <NavButton id="settings" label="Paramètres du Système" icon={Settings} colorClass="bg-red-500/10 text-red-300 border border-red-950" />
+                <NavButton id="export" label="Pôle d'Exportation" icon={Download} iconBg="from-sky-500 to-indigo-600" />
+                <NavButton id="settings" label="Paramètres du Système" icon={Settings} colorClass="bg-red-500/10 text-red-300 border border-red-950" iconBg="from-red-600 to-rose-800" />
               </>
             )}
           </nav>
