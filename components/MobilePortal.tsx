@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { 
   Layout, Database, PieChart, Calendar, Timer, 
   Briefcase, Battery, Settings2, Download, Settings, 
-  Users, BarChart3, ClipboardList, 
+  Users, BarChart3, ClipboardList, Layers,
   Search, ShieldCheck, HelpCircle, ArrowRight
 } from 'lucide-react';
 
@@ -66,13 +66,13 @@ const MODULES: ModuleItem[] = [
     minRole: 'User'
   },
   {
-    id: 'data',
-    label: 'Row Data',
-    description: 'Registre des interventions avec édition et filtres multicritères.',
-    icon: Layout,
-    colorClass: 'text-sky-500 bg-sky-500/10',
-    bgClass: 'from-sky-50/50 to-white dark:from-sky-950/20 dark:to-slate-900',
-    borderClass: 'border-sky-100 dark:border-sky-900/50',
+    id: 'data_pro',
+    label: 'Data Pro',
+    description: 'Explorateur fluide, grille interactive et recherche rapide.',
+    icon: Layers,
+    colorClass: 'text-indigo-500 bg-indigo-500/10',
+    bgClass: 'from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-slate-900',
+    borderClass: 'border-indigo-100 dark:border-indigo-900/50',
     category: 'donnees',
     minRole: 'User'
   },

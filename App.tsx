@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { GlobalFileRow } from './types';
 import { FileUpload } from './components/FileUpload';
 import { DataTable } from './components/DataTable';
+import { DataExplorer } from './components/DataExplorer';
 import { Dashboard } from './components/Dashboard';
 import { DailyStatus } from './components/DailyStatus';
 import { TTFAnalysis } from './components/TTFAnalysis';
@@ -22,7 +23,7 @@ import { ExecutiveBriefModal } from './components/ExecutiveBriefModal';
 import { computeDataDiffStats } from './utils/dataDiff';
 import { 
   Layout, Database, PieChart, Calendar, Timer, 
-  Briefcase, Battery, Settings2, Loader2, 
+  Briefcase, Battery, Settings2, Loader2, Layers, 
   Download, Settings, Menu, X, ChevronRight, ClipboardList,
   PanelLeftClose, PanelLeftOpen,
   Bell, ArrowRight, ShieldAlert, LogOut, Users, BarChart3,
@@ -92,6 +93,7 @@ const App: React.FC = () => {
       case 'dashboard': return { label: 'Analyses Globales', icon: PieChart, iconBg: 'from-blue-600 to-indigo-700' };
       case 'rapport': return { label: "Rapport d'Activité", icon: BarChart3, iconBg: 'from-purple-600 to-pink-600' };
       case 'data': return { label: 'Row Data', icon: Layout, iconBg: 'from-emerald-600 to-teal-700' };
+      case 'data_pro': return { label: 'Data Pro (Vue Fluid)', icon: Layers, iconBg: 'from-indigo-600 to-blue-700' };
       case 'daily': return { label: 'Daily Status', icon: Calendar, iconBg: 'from-cyan-600 to-blue-600' };
       case 'ttf': return { label: 'Analyse TTF', icon: Timer, iconBg: 'from-rose-600 to-red-700' };
       case 'gm': return { label: 'Feuille GM', icon: Briefcase, iconBg: 'from-violet-600 to-purple-700' };
@@ -710,7 +712,7 @@ const App: React.FC = () => {
                 </div>
                 <NavButton id="dashboard" label="Analyses Globales" icon={PieChart} iconBg="from-blue-600 to-indigo-700" />
                 <NavButton id="rapport" label="Rapport d'Activité" icon={BarChart3} colorClass="bg-slate-900 text-indigo-400 border border-slate-800/80" isNew={true} iconBg="from-purple-600 to-pink-600" />
-                <NavButton id="data" label="Row Data" icon={Layout} iconBg="from-emerald-600 to-teal-700" />
+                <NavButton id="data_pro" label="Data Pro" icon={Layers} isNew={true} iconBg="from-indigo-600 to-blue-700" />
                 <NavButton id="daily" label="Daily Status" icon={Calendar} iconBg="from-cyan-600 to-blue-600" />
                 <NavButton id="ttf" label="Analyse TTF" icon={Timer} iconBg="from-rose-600 to-red-700" />
                 <NavButton id="gm" label="Feuille GM" icon={Briefcase} iconBg="from-violet-600 to-purple-700" />
@@ -1029,13 +1031,14 @@ const App: React.FC = () => {
                         />
                       </div>
                     )}
-                    {activeTab === 'dashboard' && <div className="overflow-auto h-full"><Dashboard data={data} onFilterChange={(col, val) => setFilters(prev => ({ ...prev, [col]: val }))} onSwitchToData={() => setActiveTab('data')} /></div>}
+                    {activeTab === 'dashboard' && <div className="overflow-auto h-full"><Dashboard data={data} onFilterChange={(col, val) => setFilters(prev => ({ ...prev, [col]: val }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'rapport' && <div className="overflow-auto h-full"><ActivityReport data={data} /></div>}
                     {activeTab === 'data' && <div className="p-6 h-full"><DataTable data={data} setData={setData} onUpdateRow={(idx, f, v) => setData(prev => { const n = [...prev]; n[idx] = { ...n[idx], [f]: v }; return n; })} filters={filters} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onApplyFilters={setFilters} onSaveDatabase={handleSaveFullDatabase} canEdit={isAdmin || isManager} /></div>}
-                    {activeTab === 'daily' && <div className="overflow-auto h-full"><DailyStatus data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
-                    {activeTab === 'ttf' && <div className="overflow-auto h-full"><TTFAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
-                    {activeTab === 'gm' && <div className="overflow-auto h-full"><GMSheet data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
-                    {activeTab === 'tas' && <div className="overflow-auto h-full"><TASAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
+                    {activeTab === 'data_pro' && <div className="h-full overflow-hidden"><DataExplorer data={data} setData={setData} onUpdateRow={(idx, f, v) => setData(prev => { const n = [...prev]; n[idx] = { ...n[idx], [f]: v }; return n; })} filters={filters} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onApplyFilters={setFilters} onSaveDatabase={handleSaveFullDatabase} canEdit={isAdmin || isManager} /></div>}
+                    {activeTab === 'daily' && <div className="overflow-auto h-full"><DailyStatus data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
+                    {activeTab === 'ttf' && <div className="overflow-auto h-full"><TTFAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
+                    {activeTab === 'gm' && <div className="overflow-auto h-full"><GMSheet data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
+                    {activeTab === 'tas' && <div className="overflow-auto h-full"><TASAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'battery' && <div className="overflow-auto h-full"><BatteryTracker data={data} thresholdMonths={batteryThreshold} /></div>}
                     {activeTab === 'belt' && <div className="overflow-auto h-full"><BeltTracker data={data} thresholdDays={beltThreshold} /></div>}
                     {activeTab === 'export' && <div className="overflow-auto h-full"><ExportManager allData={data} filteredData={filteredData} onImport={(data) => handleDataLoaded(data, false)} isAdmin={isAdmin} /></div>}

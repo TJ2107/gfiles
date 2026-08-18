@@ -17,7 +17,7 @@ interface CommandPaletteProps {
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Vue d\'Ensemble & Statuts x-Value', icon: Layout, desc: 'Indicateurs clés, distribution x-Value & Graphiques' },
-  { id: 'data', label: 'Base de Données (Row Data)', icon: Database, desc: 'Gestion des fichiers & Filtres' },
+  { id: 'data_pro', label: 'Data Pro (Vue Fluid)', icon: Layout, desc: 'Explorateur fluide, filtres rapides & grille' },
   { id: 'daily', label: 'Statut Quotidien', icon: Calendar, desc: 'Suivi journalier par date' },
   { id: 'ttf', label: 'Analyse TTF', icon: Timer, desc: 'Time To Fix & Performance SLA' },
   { id: 'gm', label: 'Feuille GM / Site', icon: FileText, desc: 'Analyse détaillée par site GM' },

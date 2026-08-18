@@ -24,6 +24,7 @@ const getModuleLabel = (moduleKey: string) => {
     case 'dashboard': return "Analyses Globales";
     case 'rapport': return "Rapport d'Activité";
     case 'data': return "Row Data";
+    case 'data_pro': return "Data Pro (Vue Fluid)";
     case 'daily': return "Daily Status";
     case 'ttf': return "Analyse TTF";
     case 'gm': return "Feuille GM";
