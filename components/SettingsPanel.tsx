@@ -28,7 +28,6 @@ const getModuleLabel = (moduleKey: string) => {
     case 'ttf': return "Analyse TTF";
     case 'gm': return "Feuille GM";
     case 'tas': return "Analyse TAS";
-    case 'fe_module': return "Module FE";
     case 'battery': return "Parc Batteries";
     case 'belt': return "Audit Courroies";
     case 'export': return "Pôle d'Exportation";

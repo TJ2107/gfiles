@@ -121,17 +121,6 @@ const MODULES: ModuleItem[] = [
     minRole: 'User'
   },
   {
-    id: 'fe_module',
-    label: 'Module FE',
-    description: 'Activités et performances des ingénieurs terrain (Field Engineers).',
-    icon: Users,
-    colorClass: 'text-cyan-500 bg-cyan-500/10',
-    bgClass: 'from-cyan-50/50 to-white dark:from-cyan-950/20 dark:to-slate-900',
-    borderClass: 'border-cyan-100 dark:border-cyan-900/50',
-    category: 'technique',
-    minRole: 'User'
-  },
-  {
     id: 'battery',
     label: 'Parc Batteries',
     description: "Suivi d'usure et alertes de remplacement de batteries.",

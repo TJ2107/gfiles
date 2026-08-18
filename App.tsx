@@ -11,7 +11,6 @@ import { TASAnalysis } from './components/TASAnalysis';
 import { BatteryTracker } from './components/BatteryTracker';
 import { BeltTracker } from './components/BeltTracker';
 import { ExportManager } from './components/ExportManager';
-import { FEModule } from './components/FEModule';
 import { ActivityReport } from './components/ActivityReport';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -97,7 +96,6 @@ const App: React.FC = () => {
       case 'ttf': return { label: 'Analyse TTF', icon: Timer, iconBg: 'from-rose-600 to-red-700' };
       case 'gm': return { label: 'Feuille GM', icon: Briefcase, iconBg: 'from-violet-600 to-purple-700' };
       case 'tas': return { label: 'Analyse TAS', icon: ClipboardList, iconBg: 'from-amber-600 to-yellow-600' };
-      case 'fe_module': return { label: 'Module FE', icon: Users, iconBg: 'from-indigo-600 to-blue-700' };
       case 'battery': return { label: 'Parc Batteries', icon: Battery, iconBg: 'from-emerald-500 to-green-700' };
       case 'belt': return { label: 'Audit Courroies', icon: Settings2, iconBg: 'from-slate-600 to-slate-800' };
       case 'export': return { label: "Pôle d'Exportation", icon: Download, iconBg: 'from-sky-500 to-indigo-600' };
@@ -717,7 +715,6 @@ const App: React.FC = () => {
                 <NavButton id="ttf" label="Analyse TTF" icon={Timer} iconBg="from-rose-600 to-red-700" />
                 <NavButton id="gm" label="Feuille GM" icon={Briefcase} iconBg="from-violet-600 to-purple-700" />
                 <NavButton id="tas" label="Analyse TAS" icon={ClipboardList} iconBg="from-amber-600 to-yellow-600" />
-                <NavButton id="fe_module" label="Module FE" icon={Users} iconBg="from-indigo-600 to-blue-700" />
                 <NavButton id="battery" label="Parc Batteries" icon={Battery} iconBg="from-emerald-500 to-green-700" />
                 <NavButton id="belt" label="Audit Courroies" icon={Settings2} iconBg="from-slate-600 to-slate-800" />
                 <div className="h-px bg-slate-900/80 my-3 mx-2"></div>
@@ -1039,7 +1036,6 @@ const App: React.FC = () => {
                     {activeTab === 'ttf' && <div className="overflow-auto h-full"><TTFAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
                     {activeTab === 'gm' && <div className="overflow-auto h-full"><GMSheet data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
                     {activeTab === 'tas' && <div className="overflow-auto h-full"><TASAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
-                    {activeTab === 'fe_module' && <div className="overflow-auto h-full"><FEModule data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data')} /></div>}
                     {activeTab === 'battery' && <div className="overflow-auto h-full"><BatteryTracker data={data} thresholdMonths={batteryThreshold} /></div>}
                     {activeTab === 'belt' && <div className="overflow-auto h-full"><BeltTracker data={data} thresholdDays={beltThreshold} /></div>}
                     {activeTab === 'export' && <div className="overflow-auto h-full"><ExportManager allData={data} filteredData={filteredData} onImport={(data) => handleDataLoaded(data, false)} isAdmin={isAdmin} /></div>}

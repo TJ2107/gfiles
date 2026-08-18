@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { id: 'data', label: 'Base de Données (Row Data)', icon: Database, desc: 'Gestion des fichiers & Filtres' },
   { id: 'daily', label: 'Statut Quotidien', icon: Calendar, desc: 'Suivi journalier par date' },
   { id: 'ttf', label: 'Analyse TTF', icon: Timer, desc: 'Time To Fix & Performance SLA' },
-  { id: 'fe_module', label: 'Module Techniciens FE', icon: User, desc: 'Field Engineers & volumes SWO' },
   { id: 'gm', label: 'Feuille GM / Site', icon: FileText, desc: 'Analyse détaillée par site GM' },
   { id: 'tas', label: 'Analyse TAS', icon: Sliders, desc: 'Tickets & catégories TAS' },
   { id: 'battery', label: 'Suivi Batteries', icon: Battery, desc: 'Remplacement & santé batteries' },
