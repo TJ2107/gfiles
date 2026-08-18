@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { GlobalFileRow, XStatus } from '../types';
 import { COLUMNS, X_OPTIONS, getRowColorClass } from '../constants';
 import { parseDate } from '../utils/dateHelpers';
@@ -55,6 +55,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "X",
   "State SWO",
   "Date de création du SWO",
+  "Closing date",
   "Intervenant",
   "Assigned to",
   "Description"
@@ -117,6 +118,18 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [showMobilePagination, setShowMobilePagination] = useState(true);
+  const lastScrollTopRef = useRef(0);
+
+  const handleContainerScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScroll = e.currentTarget.scrollTop;
+    if (currentScroll > lastScrollTopRef.current + 8 && currentScroll > 15) {
+      setShowMobilePagination(false);
+    } else if (currentScroll < lastScrollTopRef.current - 8 || currentScroll <= 10) {
+      setShowMobilePagination(true);
+    }
+    lastScrollTopRef.current = currentScroll;
+  };
 
   // Detail Drawer state
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
@@ -348,31 +361,31 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
   }, [filteredData]);
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 space-y-4 p-4 lg:p-6 overflow-hidden">
+    <div onScroll={handleContainerScroll} className="flex flex-col min-h-full h-full bg-slate-50/50 space-y-2.5 sm:space-y-3 lg:space-y-4 p-2 sm:p-3 lg:p-6 overflow-y-auto lg:overflow-hidden w-full max-w-full relative">
       
       {/* 1. TOP SUMMARY & ACTION BAR */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+      <div className="bg-white p-2.5 sm:p-3.5 lg:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-4 w-full">
         
         {/* Left Title & Key Stats */}
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-md shadow-indigo-200">
-            <Layers className="w-6 h-6" />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 bg-indigo-600 text-white rounded-2xl shadow-md shadow-indigo-200 shrink-0">
+            <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Data Pro & Explorer</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Data Pro & Explorer</h2>
+              <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
                 Vue Fluid
               </span>
             </div>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
-              Affichage fluide, recherche instantanée et édition directe sur <span className="font-bold text-slate-800">{totalItems}</span> enregistrements filtrés.
+            <p className="hidden sm:block text-xs font-medium text-slate-500 mt-0.5">
+              Affichage fluide, recherche instantanée et édition directe sur <span className="font-bold text-slate-800">{totalItems}</span> enregistrements.
             </p>
           </div>
         </div>
 
         {/* Quick Presets */}
-        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 overflow-x-auto">
+        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 overflow-x-auto w-full lg:w-auto scrollbar-none">
           <button 
             onClick={() => { setQuickPreset('ALL'); setCurrentPage(1); }}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${quickPreset === 'ALL' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
@@ -400,7 +413,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
         </div>
 
         {/* Right Tools: View Mode, Export, Columns */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full lg:w-auto">
           
           {/* View Mode Switcher */}
           <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80">
@@ -467,14 +480,14 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs transition shadow-sm"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Exporter</span>
+            <span className="inline">Exporter</span>
           </button>
 
         </div>
       </div>
 
       {/* 2. SEARCH & FILTER TOOLBAR */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3 w-full">
         
         {/* Instant Search Bar */}
         <div className="relative flex-1 w-full">
@@ -496,7 +509,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
           )}
         </div>
 
-        {/* Region Filter */}
+        {/* Region & Status Filters */}
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-48">
             <select
@@ -535,7 +548,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
                 setQuickPreset('ALL');
                 setCurrentPage(1);
               }}
-              className="p-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-2xl transition border border-slate-200"
+              className="p-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-2xl transition border border-slate-200 shrink-0"
               title="Réinitialiser tous les filtres"
             >
               <FilterX className="w-4 h-4" />
@@ -546,11 +559,11 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
       </div>
 
       {/* 3. MAIN CONTENT DISPLAY (Table / Grid / Kanban) */}
-      <div className="flex-1 overflow-hidden bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col relative">
+      <div className="flex-1 overflow-hidden bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs flex flex-col relative w-full min-h-[400px]">
         
         {viewMode === 'table' && (
-          <div className="flex-1 overflow-auto relative custom-scrollbar">
-            <table className="w-full text-left border-collapse text-xs">
+          <div onScroll={handleContainerScroll} className="flex-1 overflow-x-auto overflow-y-auto relative custom-scrollbar w-full">
+            <table className="w-full text-left border-collapse text-xs min-w-[750px] sm:min-w-[900px]">
               <thead className="bg-slate-900 text-slate-200 sticky top-0 z-20 font-bold uppercase tracking-wider text-[11px] shadow-sm">
                 <tr>
                   <th className="px-4 py-3.5 w-12 text-center bg-slate-900 border-r border-slate-800">#</th>
@@ -742,8 +755,8 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
           </div>
         )}
 
-        {/* 4. PAGINATION FOOTER */}
-        <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* 4. PAGINATION FOOTER (Desktop / Tablet) */}
+        <div className="hidden sm:flex bg-slate-50 px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 border-t border-slate-200 flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
           <div className="text-xs text-slate-500 font-medium">
             Affichage de <strong className="text-slate-800">{totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}</strong> à <strong className="text-slate-800">{Math.min(currentPage * pageSize, totalItems)}</strong> sur <strong className="text-slate-800">{totalItems}</strong> enregistrements
           </div>
@@ -803,6 +816,33 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
           </div>
         </div>
 
+      </div>
+
+      {/* FLOATING MOBILE PAGINATION (Phone format: Auto-hides when scrolling down, reappears when scrolling up) */}
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 sm:hidden transition-all duration-300 transform ${showMobilePagination ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+        <div className="bg-slate-900/95 text-white backdrop-blur-md px-5 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-6">
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+            disabled={currentPage === 1}
+            className="p-2 rounded-full hover:bg-slate-800 disabled:opacity-30 text-white transition active:scale-90"
+            aria-label="Feuille précédente"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          
+          <span className="text-xs font-black tracking-widest text-slate-200 select-none">
+            {currentPage} / {totalPages}
+          </span>
+
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-full hover:bg-slate-800 disabled:opacity-30 text-white transition active:scale-90"
+            aria-label="Feuille suivante"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       {/* 5. ROW DETAIL SIDE-DRAWER */}

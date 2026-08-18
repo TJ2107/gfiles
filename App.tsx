@@ -147,16 +147,70 @@ const App: React.FC = () => {
     return () => window.removeEventListener('data-source-changed', handleSourceChange);
   }, []);
 
-  // Listen to custom data update notification events
+  // Helper to notify locally and broadcast to all open sessions / tabs
+  const broadcastDataUpdate = (stats: DataUpdateStats) => {
+    setUpdateNotificationStats(stats);
+    try {
+      const channel = new BroadcastChannel('global_files_data_updates');
+      channel.postMessage(stats);
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem('latest_data_update_broadcast', JSON.stringify({ stats, time: Date.now() }));
+    } catch {}
+  };
+
+  // Listen to custom data update notification events and multi-tab broadcasts
   useEffect(() => {
     const handleShowUpdateNotification = (e: Event) => {
       const customEvent = e as CustomEvent<DataUpdateStats>;
       if (customEvent.detail) {
-        setUpdateNotificationStats(customEvent.detail);
+        broadcastDataUpdate(customEvent.detail);
       }
     };
     window.addEventListener('show-data-update-notification', handleShowUpdateNotification);
-    return () => window.removeEventListener('show-data-update-notification', handleShowUpdateNotification);
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('global_files_data_updates');
+      channel.onmessage = async (event) => {
+        if (event.data) {
+          setUpdateNotificationStats(event.data);
+          try {
+            const dbData = await fetchFromFirebase();
+            if (Array.isArray(dbData) && dbData.length > 0) {
+              setData(dbData);
+            }
+          } catch (err) {
+            console.error('Failed auto-sync on broadcast update:', err);
+          }
+        }
+      };
+    } catch (e) {
+      console.warn('BroadcastChannel not supported:', e);
+    }
+
+    const handleStorageEvent = async (e: StorageEvent) => {
+      if (e.key === 'latest_data_update_broadcast' && e.newValue) {
+        try {
+          const payload = JSON.parse(e.newValue);
+          if (payload?.stats) {
+            setUpdateNotificationStats(payload.stats);
+            const dbData = await fetchFromFirebase();
+            if (Array.isArray(dbData) && dbData.length > 0) {
+              setData(dbData);
+            }
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageEvent);
+
+    return () => {
+      window.removeEventListener('show-data-update-notification', handleShowUpdateNotification);
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorageEvent);
+    };
   }, []);
 
   // Real-time user presence tracking
@@ -390,7 +444,7 @@ const App: React.FC = () => {
       console.log(`Data re-fetched from Firebase. Total rows: ${dbData.length}`);
       
       setData(dbData);
-      setUpdateNotificationStats(stats);
+      broadcastDataUpdate(stats);
     } catch (error) {
       console.error('CRITICAL: Error saving data:', error);
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -413,7 +467,7 @@ const App: React.FC = () => {
     try {
       const stats = computeDataDiffStats(data, data, false);
       await saveToFirebase(data, false);
-      setUpdateNotificationStats(stats);
+      broadcastDataUpdate(stats);
     } catch (error) {
       console.error('Error updating database:', error);
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -877,8 +931,8 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Sleek top header for both mobile & desktop */}
-        <header className="bg-white border-b border-slate-200/60 px-3 py-2.5 sm:px-6 sm:py-3.5 flex justify-between items-center z-50 transition-colors shrink-0 w-full">
+        {/* Sleek top header for both mobile, tablet & desktop */}
+        <header className="bg-white border-b border-slate-200/60 px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6 lg:py-3.5 flex justify-between items-center z-50 transition-colors shrink-0 w-full">
           <div className="flex items-center gap-2">
             {!isMobileOrTablet && (
               <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1.5 text-slate-600 hover:text-slate-900 transition-colors"><Menu className="w-5 h-5" /></button>
@@ -1034,7 +1088,7 @@ const App: React.FC = () => {
                     {activeTab === 'dashboard' && <div className="overflow-auto h-full"><Dashboard data={data} onFilterChange={(col, val) => setFilters(prev => ({ ...prev, [col]: val }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'rapport' && <div className="overflow-auto h-full"><ActivityReport data={data} /></div>}
                     {activeTab === 'data' && <div className="p-6 h-full"><DataTable data={data} setData={setData} onUpdateRow={(idx, f, v) => setData(prev => { const n = [...prev]; n[idx] = { ...n[idx], [f]: v }; return n; })} filters={filters} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onApplyFilters={setFilters} onSaveDatabase={handleSaveFullDatabase} canEdit={isAdmin || isManager} /></div>}
-                    {activeTab === 'data_pro' && <div className="h-full overflow-hidden"><DataExplorer data={data} setData={setData} onUpdateRow={(idx, f, v) => setData(prev => { const n = [...prev]; n[idx] = { ...n[idx], [f]: v }; return n; })} filters={filters} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onApplyFilters={setFilters} onSaveDatabase={handleSaveFullDatabase} canEdit={isAdmin || isManager} /></div>}
+                    {activeTab === 'data_pro' && <div className="h-full w-full overflow-y-auto lg:overflow-hidden"><DataExplorer data={data} setData={setData} onUpdateRow={(idx, f, v) => setData(prev => { const n = [...prev]; n[idx] = { ...n[idx], [f]: v }; return n; })} filters={filters} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onApplyFilters={setFilters} onSaveDatabase={handleSaveFullDatabase} canEdit={isAdmin || isManager} /></div>}
                     {activeTab === 'daily' && <div className="overflow-auto h-full"><DailyStatus data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'ttf' && <div className="overflow-auto h-full"><TTFAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'gm' && <div className="overflow-auto h-full"><GMSheet data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}

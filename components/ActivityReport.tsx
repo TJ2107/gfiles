@@ -442,7 +442,7 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
       </div>
 
       {/* MAIN METRIC BENTO GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* CARD 1: SWO CREATED VS CLOSED */}
         <div 
@@ -581,41 +581,6 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
             <div className="flex items-baseline justify-between">
               <span className="text-[10px] font-black text-rose-500 uppercase">Hors délai</span>
               <span className="text-xl font-black text-rose-500">{stats.tasLate.length}</span>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-dashed flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
-            <span>Cliquez pour détailler</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        </div>
-
-        {/* CARD 5: PM IN DELAY VS OUT OF DELAY */}
-        <div 
-          onClick={() => setActiveDetailFilter('PM_ON_TIME')}
-          className={`cursor-pointer p-6 rounded-[2.5rem] border transition-all duration-300 flex flex-col justify-between h-72 relative overflow-hidden group ${
-            activeDetailFilter.startsWith('PM_')
-              ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-500/10'
-              : 'bg-white border-slate-100 hover:border-slate-300 shadow-sm'
-          }`}
-        >
-          <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] font-black px-2.5 py-1 bg-violet-50 text-violet-700 rounded-lg uppercase tracking-wider">SLA PM</span>
-              <CheckSquare className="w-5 h-5 text-violet-500" />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase text-xs tracking-tight">PM dans le Délai vs Hors</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Conformité de planification</p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-black text-violet-600 uppercase">Respecté ({pmComplianceRate}%)</span>
-              <span className="text-xl font-black text-violet-600">{stats.pmOnTime.length}</span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-black text-amber-600 uppercase">Hors délai / Replanifié</span>
-              <span className="text-xl font-black text-amber-600">{stats.pmLate.length}</span>
             </div>
           </div>
 

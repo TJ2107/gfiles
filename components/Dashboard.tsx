@@ -48,11 +48,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
     if (!data || !Array.isArray(data)) return [];
     return data.filter(row => {
       if (!row) return false;
-      const region = row["Region"] ? String(row["Region"]).trim() : "";
       const xVal = row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"];
-      const hasX = xVal !== undefined && xVal !== null && String(xVal).trim() !== "" && String(xVal).trim() !== "Non défini";
-      const hasRegion = region !== "" && region !== "Non défini";
-      return hasRegion || hasX;
+      if (xVal === undefined || xVal === null) return false;
+      const strVal = String(xVal).trim();
+      if (!strVal || strVal === "Non défini" || strVal === "null" || strVal === "undefined") return false;
+      return true;
     });
   }, [data]);
 
@@ -68,26 +68,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
     const counts: Record<string, number> = {};
     validData.forEach(row => {
       const x = String(row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"] || "").trim();
-      if (!x || x === "Non défini") return;
+      if (!x || x === "Non défini" || x === "null" || x === "undefined") return;
       counts[x] = (counts[x] || 0) + 1;
     });
     return Object.keys(counts).map(key => ({ name: key, count: counts[key] }));
   }, [validData]);
 
   const pivotTableData = useMemo(() => {
-    const distinctRegions = Array.from(new Set(validData.map(d => String(d["Region"]).trim()).filter(r => r && r !== "Non défini"))).sort();
+    const rawRegions = validData
+      .map(d => String(d["Region"] || "").trim())
+      .filter(r => r && r !== "Non défini" && r !== "Non définie" && r !== "null" && r !== "undefined");
+    const distinctRegions = Array.from(new Set(rawRegions)).sort();
     return distinctRegions.map(region => {
-      const regionData = validData.filter(d => String(d["Region"]).trim() === region);
+      const regionData = validData.filter(d => String(d["Region"] || "").trim() === region);
       const countsByX: Record<string, number> = {};
       X_OPTIONS.forEach(opt => countsByX[opt] = 0);
-      countsByX["Autre"] = 0;
+      let regionTotal = 0;
       regionData.forEach(row => {
-        const xVal = row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"];
-        if (xVal && X_OPTIONS.includes(xVal as XStatus)) countsByX[String(xVal)] = (countsByX[String(xVal)] || 0) + 1;
-        else countsByX["Autre"] = (countsByX["Autre"] || 0) + 1;
+        const xVal = String(row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"] || "").trim();
+        if (xVal && xVal !== "Non défini" && X_OPTIONS.includes(xVal as XStatus)) {
+          countsByX[xVal] = (countsByX[xVal] || 0) + 1;
+          regionTotal++;
+        }
       });
-      return { region, ...countsByX, total: regionData.length };
-    }).sort((a, b) => b.total - a.total);
+      return { region, ...countsByX, total: regionTotal };
+    }).filter(item => item.total > 0).sort((a, b) => b.total - a.total);
   }, [validData]);
 
   const batteryStats = useMemo(() => {
@@ -222,10 +227,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
   }, [validData]);
 
   return (
-    <div className="p-6 space-y-8 bg-[#F8FAFC] min-h-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 lg:space-y-8 bg-[#F8FAFC] min-h-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Analytics <span className="text-indigo-600">Overview</span></h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tighter uppercase">Analytics <span className="text-indigo-600">Overview</span></h2>
           <p className="text-sm font-medium text-slate-400 mt-1">Données compilées et intelligence opérationnelle en temps réel.</p>
         </div>
         <div className="flex items-center gap-2 bg-white border border-slate-200 px-5 py-2.5 rounded-2xl text-slate-700 shadow-sm">
@@ -345,7 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
             {/* Center Stat Badge */}
             <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
               <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest">Total</span>
-              <span className="text-2xl font-black text-slate-900">{Array.isArray(data) ? data.length : 0}</span>
+              <span className="text-2xl font-black text-slate-900">{validData.length}</span>
             </div>
           </div>
         </div>

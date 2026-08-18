@@ -109,6 +109,18 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 50;
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [showMobilePagination, setShowMobilePagination] = useState(true);
+  const lastTableScrollTopRef = useRef(0);
+
+  const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScroll = e.currentTarget.scrollTop;
+    if (currentScroll > lastTableScrollTopRef.current + 8 && currentScroll > 15) {
+      setShowMobilePagination(false);
+    } else if (currentScroll < lastTableScrollTopRef.current - 8 || currentScroll <= 10) {
+      setShowMobilePagination(true);
+    }
+    lastTableScrollTopRef.current = currentScroll;
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -362,10 +374,10 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
 
   return (
     <div className="flex flex-col h-full bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04),_0_1px_2px_rgba(0,0,0,0.02),_inset_0_1px_2px_rgba(255,255,255,0.8)] border border-slate-100 rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500">
-      <div className={`border-b bg-gray-50/80 backdrop-blur-sm flex flex-col gap-3 relative z-30 transition-all duration-300 ${isHeaderCollapsed ? 'p-3' : 'p-5'}`}>
-        <div className="flex flex-row justify-between items-center gap-4 w-full">
-             <div className="flex items-center gap-3">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-2">
+      <div className={`border-b bg-gray-50/80 backdrop-blur-sm flex flex-col gap-2.5 sm:gap-3 relative z-30 transition-all duration-300 ${isHeaderCollapsed ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4 lg:p-5'}`}>
+        <div className="flex flex-row justify-between items-center gap-3 sm:gap-4 w-full">
+             <div className="flex items-center gap-2.5 sm:gap-3">
+                <h2 className="text-base sm:text-xl lg:text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-2">
                   <Table className="w-5 h-5 text-indigo-600" />
                   <span className="hidden xs:inline">Données</span> 
                   <span className="text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-xs sm:text-sm ml-1">{filteredData.length}</span>
@@ -569,7 +581,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
       )}
       </div>
 
-      <div className="overflow-auto flex-1 relative scrollbar-thin scrollbar-thumb-indigo-100 scrollbar-track-transparent">
+      <div onScroll={handleTableScroll} className="overflow-auto flex-1 relative scrollbar-thin scrollbar-thumb-indigo-100 scrollbar-track-transparent">
         <table className="min-w-max w-full text-xs text-left border-collapse pb-40">
           <thead className="bg-slate-900 dark:bg-slate-950 text-slate-100 font-black uppercase tracking-wider sticky top-0 z-20 shadow-[0_4px_16px_rgba(0,0,0,0.2)] border-b-2 border-slate-950">
             <tr>
@@ -827,8 +839,8 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
         <div className="h-16 pointer-events-none" />
       </div>
 
-      {/* Pinned Pagination Footer */}
-      <div className="px-4 py-2 border-t bg-gray-50/80 backdrop-blur-sm flex flex-wrap items-center justify-between gap-3 z-20">
+      {/* Pinned Pagination Footer (Desktop / Tablet) */}
+      <div className="hidden sm:flex px-3 py-1.5 md:px-4 md:py-2 border-t bg-gray-50/80 backdrop-blur-sm flex-wrap items-center justify-between gap-2 md:gap-3 z-20">
         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
           Affichage de {filteredData.length === 0 ? 0 : Math.min(filteredData.length, (currentPage - 1) * rowsPerPage + 1)}-{Math.min(filteredData.length, currentPage * rowsPerPage)} sur {filteredData.length} records
         </div>
@@ -868,6 +880,33 @@ export const DataTable: React.FC<DataTableProps> = ({ data, setData, onUpdateRow
             className="p-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronsRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Mobile Pagination (Phone format: Auto-hides when scrolling down, reappears when scrolling up) */}
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 sm:hidden transition-all duration-300 transform ${showMobilePagination ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+        <div className="bg-slate-900/95 text-white backdrop-blur-md px-5 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-6">
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+            disabled={currentPage === 1}
+            className="p-2 rounded-full hover:bg-slate-800 disabled:opacity-30 text-white transition active:scale-90"
+            aria-label="Feuille précédente"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          
+          <span className="text-xs font-black tracking-widest text-slate-200 select-none">
+            {currentPage} / {totalPages || 1}
+          </span>
+
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="p-2 rounded-full hover:bg-slate-800 disabled:opacity-30 text-white transition active:scale-90"
+            aria-label="Feuille suivante"
+          >
+            <ChevronRight className="w-6 h-6" />
           </button>
         </div>
       </div>
