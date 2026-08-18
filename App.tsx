@@ -53,6 +53,12 @@ const App: React.FC = () => {
     }
     return 'system';
   });
+  const [autoNightMode, setAutoNightMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auto_night_mode') === 'true';
+    }
+    return false;
+  });
   const [isNightMode, setIsNightMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dbQuotaError, setDbQuotaError] = useState<boolean>(false);
@@ -186,6 +192,22 @@ const App: React.FC = () => {
       return () => mediaQuery.removeEventListener('change', applyTheme);
     }
   }, [themeMode]);
+
+  useEffect(() => {
+    if (!autoNightMode) return;
+    const checkAutoNight = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const isNightTime = hours >= 20 || hours < 6;
+      if (isNightTime && themeMode !== 'dark') {
+        setThemeMode('dark');
+        localStorage.setItem('theme_mode', 'dark');
+      }
+    };
+    checkAutoNight();
+    const timer = setInterval(checkAutoNight, 60000);
+    return () => clearInterval(timer);
+  }, [autoNightMode, themeMode]);
   const globalAlerts = useMemo(() => {
     const alerts: { id: string; type: 'CRITICAL' | 'WARNING'; category: string; title: string; desc: string; swo?: string }[] = [];
     const now = new Date();

@@ -61,6 +61,8 @@ interface SettingsPanelProps {
   setMaintenanceActive?: (value: boolean) => void;
   versionAnnounceActive?: boolean;
   setVersionAnnounceActive?: (value: boolean) => void;
+  autoNightMode?: boolean;
+  setAutoNightMode?: (value: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -76,7 +78,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   maintenanceActive = false,
   setMaintenanceActive,
   versionAnnounceActive = true,
-  setVersionAnnounceActive
+  setVersionAnnounceActive,
+  autoNightMode,
+  setAutoNightMode
 }) => {
   const isAdmin = userRole === 'Admin';
   const [activeTab, setActiveTab] = useState<'config' | 'users' | 'approvals' | 'connected' | 'danger'>('config');
@@ -626,7 +630,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }`}
                       >
                         <Moon className="w-3.5 h-3.5" />
-                        <span>Sombre</span>
+                        <span>Nuit</span>
                       </button>
                       <button
                         onClick={() => {
@@ -645,6 +649,28 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <span>Mode Appareil</span>
                       </button>
                     </div>
+                  </div>
+
+                  {/* Auto Night Mode schedule option */}
+                  <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Appliquer automatiquement entre 20h00 et 06h00</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Bascule automatiquement sur le mode nuit pendant les heures nocturnes.</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={autoNightMode || false} 
+                        onChange={(e) => {
+                          if (setAutoNightMode) {
+                            setAutoNightMode(e.target.checked);
+                            localStorage.setItem('auto_night_mode', String(e.target.checked));
+                          }
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+                    </label>
                   </div>
                 </div>
 

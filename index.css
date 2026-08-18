@@ -13,7 +13,17 @@
  * to ensure legibility and a sharp layout.
  */
 .dark body {
-  @apply bg-slate-950 text-slate-100;
+  background-color: #151515 !important;
+  color: #DCD8D0 !important;
+  filter: brightness(0.93);
+}
+
+/* Attenuate bright blues and indigos in night mode */
+.dark .text-blue-500, .dark .text-blue-600, .dark .text-indigo-600, .dark .text-indigo-500 {
+  color: #8C9EBA !important;
+}
+.dark .bg-blue-600, .dark .bg-indigo-600 {
+  background-color: #3B4E6A !important;
 }
 
 /* Map specific hardcoded backgrounds to their dark equivalents */
