@@ -27,7 +27,7 @@ import {
   Download, Settings, Menu, X, ChevronRight, ClipboardList,
   PanelLeftClose, PanelLeftOpen,
   Bell, ArrowRight, ShieldAlert, LogOut, Users, BarChart3,
-  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, FileCheck
+  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, FileCheck, Star
 } from 'lucide-react';
 
 import { parseDate } from './utils/dateHelpers';
@@ -68,6 +68,42 @@ const App: React.FC = () => {
   const [updateNotificationStats, setUpdateNotificationStats] = useState<DataUpdateStats | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isExecutiveBriefOpen, setIsExecutiveBriefOpen] = useState(false);
+  const [favoriteModules, setFavoriteModules] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('user_favorite_modules');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return ['dashboard', 'battery', 'belt'];
+  });
+
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavoriteModules(prev => {
+      const updated = prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id];
+      localStorage.setItem('user_favorite_modules', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const getModuleMeta = (id: string) => {
+    switch (id) {
+      case 'upload': return { label: 'Import Excel', icon: Database, iconBg: 'from-amber-500 to-orange-600' };
+      case 'dashboard': return { label: 'Analyses Globales', icon: PieChart, iconBg: 'from-blue-600 to-indigo-700' };
+      case 'rapport': return { label: "Rapport d'Activité", icon: BarChart3, iconBg: 'from-purple-600 to-pink-600' };
+      case 'data': return { label: 'Row Data', icon: Layout, iconBg: 'from-emerald-600 to-teal-700' };
+      case 'daily': return { label: 'Daily Status', icon: Calendar, iconBg: 'from-cyan-600 to-blue-600' };
+      case 'ttf': return { label: 'Analyse TTF', icon: Timer, iconBg: 'from-rose-600 to-red-700' };
+      case 'gm': return { label: 'Feuille GM', icon: Briefcase, iconBg: 'from-violet-600 to-purple-700' };
+      case 'tas': return { label: 'Analyse TAS', icon: ClipboardList, iconBg: 'from-amber-600 to-yellow-600' };
+      case 'fe_module': return { label: 'Module FE', icon: Users, iconBg: 'from-indigo-600 to-blue-700' };
+      case 'battery': return { label: 'Parc Batteries', icon: Battery, iconBg: 'from-emerald-500 to-green-700' };
+      case 'belt': return { label: 'Audit Courroies', icon: Settings2, iconBg: 'from-slate-600 to-slate-800' };
+      case 'export': return { label: "Pôle d'Exportation", icon: Download, iconBg: 'from-sky-500 to-indigo-600' };
+      default: return null;
+    }
+  };
 
   const isAdmin = role === 'Admin';
   const isManager = role === 'Manager' || role === 'Admin';
@@ -161,9 +197,18 @@ const App: React.FC = () => {
     return false;
   });
 
+  const CURRENT_VERSION = 'v3.6.0';
+
   const [versionAnnounceActive, setVersionAnnounceActive] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('version_announce_dismissed') !== 'v3.5.0';
+      const dismissed = localStorage.getItem('version_announce_dismissed');
+      const lastSeen = localStorage.getItem('app_last_seen_version');
+      if (lastSeen !== CURRENT_VERSION) {
+        localStorage.setItem('app_last_seen_version', CURRENT_VERSION);
+        localStorage.removeItem('version_announce_dismissed');
+        return true;
+      }
+      return dismissed !== CURRENT_VERSION;
     }
     return true;
   });
@@ -399,6 +444,7 @@ const App: React.FC = () => {
 
   const NavButton = ({ id, label, icon: Icon, colorClass, isNew, iconBg }: { id: string, label: string, icon: React.ElementType, colorClass?: string, isNew?: boolean, iconBg?: string }) => {
     const isActive = activeTab === id;
+    const isFavorite = favoriteModules.includes(id);
     return (
       <button
         onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }}
@@ -408,14 +454,25 @@ const App: React.FC = () => {
             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
         }`}
       >
-        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className={`relative flex items-center justify-center p-2 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] bg-gradient-to-br ${iconBg || 'from-indigo-600 to-violet-700'} border border-white/20 group-hover:scale-110 transition-transform`}>
+        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} flex-1 min-w-0`}>
+          <div className={`relative flex items-center justify-center p-2 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] bg-gradient-to-br ${iconBg || 'from-indigo-600 to-violet-700'} border border-white/20 group-hover:scale-110 transition-transform shrink-0`}>
             <Icon className="w-4 h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
             {isNew && !isActive && <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5 rounded-full bg-indigo-300 animate-ping"></span>}
           </div>
-          {!isSidebarCollapsed && <span className="truncate">{label}</span>}
+          {!isSidebarCollapsed && <span className="truncate flex-1 text-left">{label}</span>}
         </div>
-        {!isSidebarCollapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />}
+        {!isSidebarCollapsed && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span 
+              onClick={(e) => toggleFavorite(id, e)}
+              className={`p-1 rounded-md transition-colors cursor-pointer ${isFavorite ? 'text-amber-400 hover:text-amber-300 bg-amber-500/10' : 'text-slate-600 hover:text-slate-400 opacity-0 group-hover:opacity-100'}`}
+              title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            >
+              <Star className={`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`} />
+            </span>
+            {isActive && <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />}
+          </div>
+        )}
         {!isSidebarCollapsed && isActive && <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-indigo-500 rounded-full"></span>}
       </button>
     );
@@ -621,6 +678,38 @@ const App: React.FC = () => {
             {data.length > 0 && (
               <>
                 {isAdmin && <div className="h-px bg-slate-900/80 my-2 mx-2"></div>}
+
+                {/* FAVORITES SECTION */}
+                {favoriteModules.length > 0 && (
+                  <div className="mb-3">
+                    {!isSidebarCollapsed && (
+                      <div className="px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-1">
+                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <span>Accès Rapide (Favoris)</span>
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      {favoriteModules.map(favId => {
+                        const meta = getModuleMeta(favId);
+                        if (!meta) return null;
+                        return (
+                          <NavButton 
+                            key={`fav-${favId}`} 
+                            id={favId} 
+                            label={meta.label} 
+                            icon={meta.icon} 
+                            iconBg={meta.iconBg} 
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="h-px bg-slate-900/85 my-3 mx-2"></div>
+                  </div>
+                )}
+
+                <div className="px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-1">
+                  <span>Tous les Modules</span>
+                </div>
                 <NavButton id="dashboard" label="Analyses Globales" icon={PieChart} iconBg="from-blue-600 to-indigo-700" />
                 <NavButton id="rapport" label="Rapport d'Activité" icon={BarChart3} colorClass="bg-slate-900 text-indigo-400 border border-slate-800/80" isNew={true} iconBg="from-purple-600 to-pink-600" />
                 <NavButton id="data" label="Row Data" icon={Layout} iconBg="from-emerald-600 to-teal-700" />
@@ -711,8 +800,8 @@ const App: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
               </div>
               <p className="text-[11px] sm:text-xs font-semibold leading-relaxed">
-                <strong className="font-black uppercase tracking-wider bg-white/20 px-1.5 py-0.5 rounded mr-2 text-[9px]">Mise à jour v3.5.0</strong>
-                Basculement automatique de base de données (Firebase / Cloudflare D1), voyant d'état de connexion et affichage mobile optimisé des modules Batterie et Courroie !
+                <strong className="font-black uppercase tracking-wider bg-white/20 px-1.5 py-0.5 rounded mr-2 text-[9px]">Mise à jour {CURRENT_VERSION}</strong>
+                Mode Nuit optimisé (fond chaud #151515, texte doux, luminosité réduite, bleus atténués) et activation automatique de nuit (20h-06h) !
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -725,7 +814,7 @@ const App: React.FC = () => {
               <button 
                 onClick={() => {
                   setVersionAnnounceActive(false);
-                  localStorage.setItem('version_announce_dismissed', 'v3.5.0');
+                  localStorage.setItem('version_announce_dismissed', CURRENT_VERSION);
                 }} 
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                 title="Fermer l'annonce"
@@ -746,7 +835,7 @@ const App: React.FC = () => {
                   <Sparkles className="w-5 h-5 text-indigo-500" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tighter">Nouveautés - Version v3.5.0</h3>
+                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tighter">Nouveautés - Version {CURRENT_VERSION}</h3>
                   <p className="text-[9px] text-indigo-500 font-bold uppercase tracking-widest mt-0.5">Note de version de la plateforme</p>
                 </div>
                 <button onClick={() => setShowChangelogModal(false)} className="ml-auto p-1.5 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
@@ -756,23 +845,23 @@ const App: React.FC = () => {
 
               <div className="space-y-4 text-[11px] text-slate-600 leading-relaxed max-h-[50vh] overflow-y-auto pr-2">
                 <div className="space-y-1">
-                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">🟢 Voyant de Connexion Discret</h4>
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">🌙 Mode Nuit Raffiné & Confort Visuel</h4>
                   <p>
-                    Le bouton volumineux de connexion a été retiré. Seul un voyant lumineux discret est affiché en haut dans l'en-tête (Vert pour Firebase, Ambre pour Cloudflare D1), offrant une interface épurée tout en indiquant l'état en direct.
+                    Refonte complète du mode nuit avec un fond chaud élégant (<code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">#151515</code>), un texte doux et moins agressif, une luminosité générale réduite et des couleurs bleues et indigos atténuées.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">📱 Rendus Mobiles Batterie & Courroie</h4>
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">⏰ Planification Nocturne Automatique</h4>
                   <p>
-                    Ajustement de la typographie, des paddings et des grilles de cartes KPI au format téléphone portable pour un rendu fluide sans débordement.
+                    Option dans les paramètres pour activer l'application automatique du mode nuit entre 20h00 et 06h00 de manière autonome.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">🔄 Hybrid Data Engine</h4>
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">🔄 Suivi Automatique des Mises à Jour</h4>
                   <p>
-                    Synchronisation hybride intelligente avec basculement automatique sans perte de données entre Firebase Firestore et Cloudflare D1.
+                    Le bandeau de nouvelle version et le journal des modifications se mettent désormais à jour automatiquement à chaque nouveau déploiement pour informer en temps réel les utilisateurs des évolutions de l'application.
                   </p>
                 </div>
               </div>

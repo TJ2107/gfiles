@@ -340,12 +340,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       {/* Top Welcome & Context Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
         <div className="flex items-center gap-4">
-          <div className="bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20 flex items-center justify-center shadow-inner shrink-0">
-            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-500 animate-[spin_30s_linear_infinite]" />
+          <div className="bg-slate-800/10 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-700/30 flex items-center justify-center shadow-inner shrink-0">
+            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-slate-700 dark:text-slate-300 animate-[spin_30s_linear_infinite]" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
-              Paramètres <span className="text-indigo-600">Système</span>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tighter uppercase">
+              Paramètres <span className="text-slate-700 dark:text-slate-300">Système</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Configurez les variables d'analyse, validez les nouveaux utilisateurs et gérez les autorisations d'accès.</p>
           </div>
@@ -371,7 +371,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   onClick={() => setActiveTab('config')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeTab === 'config'
-                      ? 'bg-slate-950 text-indigo-400 dark:bg-slate-800 border-l-[3px] border-indigo-500 shadow-sm'
+                      ? 'bg-slate-950 text-slate-200 dark:bg-slate-800 border-l-[3px] border-slate-500 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/30'
                   }`}
                 >
@@ -384,7 +384,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     onClick={() => setActiveTab('approvals')}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                       activeTab === 'approvals'
-                        ? 'bg-slate-950 text-indigo-400 dark:bg-slate-800 border-l-[3px] border-indigo-500 shadow-sm'
+                        ? 'bg-slate-950 text-slate-200 dark:bg-slate-800 border-l-[3px] border-slate-500 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/30'
                     }`}
                   >
@@ -405,7 +405,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     onClick={() => setActiveTab('users')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                       activeTab === 'users'
-                        ? 'bg-slate-950 text-indigo-400 dark:bg-slate-800 border-l-[3px] border-indigo-500 shadow-sm'
+                        ? 'bg-slate-950 text-slate-200 dark:bg-slate-800 border-l-[3px] border-slate-500 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/30'
                     }`}
                   >
@@ -418,7 +418,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   onClick={() => setActiveTab('connected')}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeTab === 'connected'
-                      ? 'bg-slate-950 text-indigo-400 dark:bg-slate-800 border-l-[3px] border-indigo-500 shadow-sm'
+                      ? 'bg-slate-950 text-slate-200 dark:bg-slate-800 border-l-[3px] border-slate-500 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/30'
                   }`}
                 >
@@ -530,7 +530,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <h3 className="text-xs sm:text-sm font-bold text-slate-950 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2">
               {activeTab === 'config' && (
                 <>
-                  <Sliders className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <Sliders className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                   <span>Seuils Analytiques & Préférences visuelles</span>
                 </>
               )}
@@ -542,7 +542,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               )}
               {activeTab === 'users' && (
                 <>
-                  <Users className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <Users className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                   <span>Comptes & Droits d'Accès d'Équipe</span>
                 </>
               )}
@@ -563,10 +563,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <button
                 onClick={loadUsers}
                 disabled={isLoadingUsers}
-                className="text-xs font-semibold text-slate-500 hover:text-indigo-500 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors"
                 title="Actualiser la liste"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsers ? 'animate-spin text-indigo-500' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsers ? 'animate-spin text-slate-700' : ''}`} />
                 <span className="hidden sm:inline">Actualiser</span>
               </button>
             )}
@@ -591,7 +591,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1.5">
                       <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                        <Sun className="w-4 h-4 text-indigo-500" />
+                        <Sun className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                         <span>Ajuster le Thème Visuel</span>
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
@@ -609,7 +609,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           (themeMode || 'system') === 'light'
-                            ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                       >
@@ -625,7 +625,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           (themeMode || 'system') === 'dark'
-                            ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                       >
@@ -641,7 +641,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           (themeMode || 'system') === 'system'
-                            ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                       >
@@ -669,7 +669,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         }}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-700"></div>
                     </label>
                   </div>
                 </div>
@@ -679,7 +679,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div className="p-5 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl bg-white dark:bg-slate-900 shadow-sm space-y-5 animate-in fade-in duration-300">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-indigo-500" />
+                        <Bell className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                         <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
                           Communication & Information Utilisateurs
                         </h4>
@@ -698,7 +698,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <span className="text-xs font-bold text-slate-850 dark:text-slate-200">Bandeau de Nouvelle Version</span>
                           </div>
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Affiche un bandeau d'actualité élégant signalant le déploiement de la version <strong>v3.4.0</strong> (optimisation des performances graphiques et restrictions de sécurité).
+                            Affiche un bandeau d'actualité élégant signalant le déploiement de la version <strong>v3.6.0</strong> (mode nuit raffiné et planification automatique).
                           </p>
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -713,12 +713,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 if (newVal) {
                                   localStorage.removeItem('version_announce_dismissed');
                                 } else {
-                                  localStorage.setItem('version_announce_dismissed', 'v3.5.0');
+                                  localStorage.setItem('version_announce_dismissed', 'v3.6.0');
                                 }
                               }
                             }}
                             className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              versionAnnounceActive ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-800'
+                              versionAnnounceActive ? 'bg-slate-700' : 'bg-slate-200 dark:bg-slate-800'
                             }`}
                             role="switch"
                             aria-checked={versionAnnounceActive}
@@ -737,7 +737,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <div className="p-4 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/40 dark:border-slate-800/60 rounded-xl flex flex-col justify-between gap-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <Wrench className="w-4 h-4 text-indigo-500" />
+                            <Wrench className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                             <span className="text-xs font-bold text-slate-850 dark:text-slate-200">Mode Maintenance Planifiée</span>
                           </div>
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -757,7 +757,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                               }
                             }}
                             className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              maintenanceActive ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-800'
+                              maintenanceActive ? 'bg-slate-700' : 'bg-slate-200 dark:bg-slate-800'
                             }`}
                             role="switch"
                             aria-checked={maintenanceActive}
