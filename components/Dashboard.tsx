@@ -44,6 +44,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
   });
   const [dateB, setDateB] = useState(toInputDate(new Date()));
 
+  const validData = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
+    return data.filter(row => {
+      if (!row) return false;
+      const region = row["Region"] ? String(row["Region"]).trim() : "";
+      const xVal = row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"];
+      const hasX = xVal !== undefined && xVal !== null && String(xVal).trim() !== "" && String(xVal).trim() !== "Non défini";
+      const hasRegion = region !== "" && region !== "Non défini";
+      return hasRegion || hasX;
+    });
+  }, [data]);
+
   const handleChartClick = (entry: { name: string }, column: string) => {
      const name = entry?.name || entry?.activePayload?.[0]?.payload?.region || entry?.activePayload?.[0]?.payload?.name;
      if (name) {
@@ -54,20 +66,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
 
   const statsByX = useMemo(() => {
     const counts: Record<string, number> = {};
-    if (!data || !Array.isArray(data)) return [];
-    data.forEach(row => {
-      if (!row) return;
-      const x = String(row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"] || "Non défini");
+    validData.forEach(row => {
+      const x = String(row["X"] || row["x-Value"] || row["x_Value"] || row["X Status"] || row["State SWO"] || row["TAS Status"] || "").trim();
+      if (!x || x === "Non défini") return;
       counts[x] = (counts[x] || 0) + 1;
     });
     return Object.keys(counts).map(key => ({ name: key, count: counts[key] }));
-  }, [data]);
+  }, [validData]);
 
   const pivotTableData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
-    const distinctRegions = Array.from(new Set(data.map(d => String((d && d["Region"]) || "Non défini")))).sort();
+    const distinctRegions = Array.from(new Set(validData.map(d => String(d["Region"]).trim()).filter(r => r && r !== "Non défini"))).sort();
     return distinctRegions.map(region => {
-      const regionData = data.filter(d => d && String(d["Region"] || "Non défini") === region);
+      const regionData = validData.filter(d => String(d["Region"]).trim() === region);
       const countsByX: Record<string, number> = {};
       X_OPTIONS.forEach(opt => countsByX[opt] = 0);
       countsByX["Autre"] = 0;
@@ -78,15 +88,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
       });
       return { region, ...countsByX, total: regionData.length };
     }).sort((a, b) => b.total - a.total);
-  }, [data]);
+  }, [validData]);
 
   const batteryStats = useMemo(() => {
     const sitesMap: Record<string, Date> = {};
     const now = new Date();
-    if (!data || !Array.isArray(data)) return { green: 0, orange: 0, red: 0, series: [] };
     
-    data.forEach(row => {
-      if (!row) return;
+    validData.forEach(row => {
       const desc = String(row["Description"] || "").toLowerCase();
       const status = String(row["State SWO"] || row["status"] || "").toUpperCase();
       
@@ -116,7 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
     const green = values.length - red - orange;
     const percentHealthy = values.length > 0 ? Math.round((green / values.length) * 100) : 100;
     return { total: values.length, red, orange, green, percentHealthy };
-  }, [data]);
+  }, [validData]);
 
   const KPICard = ({ title, value, icon: Icon, colorClass, subtitle }: { title: string; value: string | number; icon: React.ElementType; colorClass: string; subtitle?: string }) => (
     <div className={`relative bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-500`}>
@@ -135,18 +143,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
   );
 
   const comparisonData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return { periodA: [], periodB: [] };
     const getFluxStats = (dateStr: string) => {
       const targetDate = new Date(dateStr);
       targetDate.setHours(0, 0, 0, 0);
       const endOfDay = new Date(dateStr);
       endOfDay.setHours(23, 59, 59, 999);
       const regionMap: Record<string, Record<string, number>> = {};
-      data.forEach(row => {
-        if (!row) return;
+      validData.forEach(row => {
         const creationDate = parseDate(row["Date de création du SWO"]);
         const closingDate = parseDate(row["Closing date"]) || parseDate(row["Date de Clôture"]);
-        const reg = String(row["Region"] || "Non défini");
+        const reg = String(row["Region"] || "").trim();
+        if (!reg || reg === "Non défini") return;
         const xVal = String(row["X"] || "Autre");
         if (!regionMap[reg]) {
           regionMap[reg] = { total: 0 } as Record<string, number>;
@@ -175,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
       dataA: statsA[reg] || { total: 0, ...Object.fromEntries(X_OPTIONS.map(o => [o, 0])) },
       dataB: statsB[reg] || { total: 0, ...Object.fromEntries(X_OPTIONS.map(o => [o, 0])) }
     }));
-  }, [data, dateA, dateB]);
+  }, [validData, dateA, dateB]);
 
   const totalsCompare = useMemo(() => {
     const sums = {
@@ -200,23 +207,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
   };
 
   const dossiersOuvertsTVX_SPA = useMemo(() => {
-    if (!data || !Array.isArray(data)) return 0;
-    return data.filter(d => {
-      if (!d) return false;
+    return validData.filter(d => {
       const x = String(d["X"] || "");
       return x === XStatus.TVX_STHIC || x === XStatus.STHIC_SPA;
     }).length;
-  }, [data]);
+  }, [validData]);
 
   const dossiersCloturesX = useMemo(() => {
-    if (!data || !Array.isArray(data)) return 0;
-    return data.filter(d => d && String(d["X"] || "") === XStatus.CLOSED).length;
-  }, [data]);
+    return validData.filter(d => String(d["X"] || "") === XStatus.CLOSED).length;
+  }, [validData]);
 
   const htcCount = useMemo(() => {
-    if (!data || !Array.isArray(data)) return 0;
-    return data.filter(d => d && String(d["X"] || "").includes("HTC")).length;
-  }, [data]);
+    return validData.filter(d => String(d["X"] || "").includes("HTC")).length;
+  }, [validData]);
 
   return (
     <div className="p-6 space-y-8 bg-[#F8FAFC] min-h-full">
@@ -232,7 +235,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard title="Total SWO Database" value={Array.isArray(data) ? data.length : 0} icon={Database} colorClass="text-slate-900" />
+        <KPICard title="Total SWO Analysés" value={validData.length} icon={Database} colorClass="text-slate-900" subtitle={`Sur ${Array.isArray(data) ? data.length : 0} lignes`} />
         <KPICard 
           title="Dossiers Ouverts (TVX+SPA)" 
           value={dossiersOuvertsTVX_SPA} 
@@ -304,7 +307,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
                  <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600">
                    <Layers className="w-5 h-5" />
                  </div>
-                 Mix Opérationnel (X) — Donut Pro
+                 Statut General des SWO
                </h3>
                <p className="text-[11px] font-bold text-slate-400 mt-0.5">Répartition dynamique par statut d'intervention</p>
              </div>
@@ -354,7 +357,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
                  <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600">
                    <TrendingUp className="w-5 h-5" />
                  </div>
-                 Production Globale par Région — Histogramme HD
+                 Statut de SWO par Régions
                </h3>
                <p className="text-[11px] font-bold text-slate-400 mt-0.5">Analyse comparative par zone géographique et statut</p>
              </div>
@@ -445,12 +448,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
               <tr className="bg-slate-100 text-[10px] text-slate-500 font-black uppercase tracking-widest border-t border-slate-800">
                 {X_OPTIONS.map(opt => (
                   <React.Fragment key={`${opt}-sub`}>
-                    <th className="px-2 py-3 border-r border-slate-200 text-center">Période A</th>
-                    <th className="px-2 py-3 border-r border-slate-200 text-center bg-indigo-50/60 text-indigo-700 font-black">Période B</th>
+                    <th className="px-2 py-3 border-r border-slate-200 text-center">Hier</th>
+                    <th className="px-2 py-3 border-r border-slate-200 text-center bg-indigo-50/60 text-indigo-700 font-black">Aujourd'hui</th>
                   </React.Fragment>
                 ))}
-                <th className="px-2 py-3 border-r border-slate-200 text-center">Période A</th>
-                <th className="px-2 py-3 text-center bg-indigo-100 text-indigo-900 font-black">Période B</th>
+                <th className="px-2 py-3 border-r border-slate-200 text-center">Hier</th>
+                <th className="px-2 py-3 text-center bg-indigo-100 text-indigo-900 font-black">Aujourd'hui</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
