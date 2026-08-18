@@ -588,7 +588,7 @@ const App: React.FC = () => {
 
           <div className={`pt-6 pb-4 px-4 flex flex-col items-center transition-all ${isSidebarCollapsed ? 'px-2' : ''}`}>
             <div className="flex items-center gap-3 w-full px-2 py-3 border-b border-slate-900/80 mb-4 justify-start">
-              <div className="bg-white p-1 rounded-xl flex items-center justify-center relative shadow-md w-10 h-10 shrink-0 border border-slate-800/50">
+              <div className="bg-white p-1 rounded-xl flex items-center justify-center relative shadow-md w-12 h-12 shrink-0 border border-slate-800/50">
                 <svg viewBox="0 0 500 500" className="w-full h-full">
                   <defs>
                     <radialGradient id="bg-grad-sidebar" cx="50%" cy="50%" r="50%">
