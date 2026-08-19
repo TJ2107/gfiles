@@ -318,8 +318,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
              </div>
              <button onClick={() => downloadChartAsJpg(pieChartRef, 'statut_x')} className="p-3 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl text-slate-400 transition-all shadow-xs"><Camera className="w-5 h-5" /></button>
           </div>
-          <div className="h-[320px] w-full relative z-10">
-            <ResponsiveContainer width="99%" height={320}>
+          <div className="h-[320px] w-full min-h-[320px] min-w-0 relative z-10">
+            <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={250}>
               <PieChart>
                 <defs>
                   {Object.entries(X_COLORS).map(([key, color]) => (
@@ -368,8 +368,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onFilterChange, onSw
              </div>
              <button onClick={() => downloadChartAsJpg(regionChartRef, 'production_region')} className="p-3 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl text-slate-400 transition-all shadow-xs"><Camera className="w-5 h-5" /></button>
           </div>
-          <div className="h-[320px] w-full relative z-10">
-            <ResponsiveContainer width="99%" height={320}>
+          <div className="h-[320px] w-full min-h-[320px] min-w-0 relative z-10">
+            <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={250}>
               <BarChart data={pivotTableData} margin={{ bottom: 35, top: 10, left: -10, right: 10 }} onClick={(e) => handleChartClick(e, "Region")}>
                 <defs>
                   {Object.entries(X_COLORS).map(([key, color]) => (

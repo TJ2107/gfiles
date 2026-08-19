@@ -33,9 +33,18 @@ const isForceD1Active = (): boolean => {
 
 const checkAndNotifyQuotaError = (e: unknown) => {
   const errMsg = e instanceof Error ? e.message : String(e);
-  if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota exceeded') || errMsg.includes('quota') || errMsg.includes('Quota limit exceeded')) {
+  if (
+    errMsg.includes('resource-exhausted') || 
+    errMsg.includes('Quota exceeded') || 
+    errMsg.includes('quota') || 
+    errMsg.includes('Quota limit exceeded') ||
+    errMsg.includes('WebChannelConnection') ||
+    errMsg.includes('transport errored') ||
+    errMsg.includes('unavailable')
+  ) {
     sessionQuotaExceeded = true;
     if (typeof window !== 'undefined') {
+      localStorage.setItem('force_d1_active', 'true');
       window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
     }
   }

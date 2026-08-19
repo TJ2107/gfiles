@@ -4,7 +4,7 @@ import { parseDate, formatDate } from '../utils/dateHelpers';
 import { 
   Calendar, ChevronLeft, ChevronRight, 
   FileText, Battery as BatteryIcon, 
-  Settings2, ClipboardList, CheckSquare, Clock, 
+  Settings2, ClipboardList, Clock, 
   User, MapPin, Search, ArrowRight, BarChart3, FileSpreadsheet,
   AlertTriangle
 } from 'lucide-react';
@@ -337,41 +337,36 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
     return total > 0 ? Math.round((stats.tasOnTime.length / total) * 100) : 100;
   }, [stats]);
 
-  const pmComplianceRate = useMemo(() => {
-    const total = stats.pmOnTime.length + stats.pmLate.length;
-    return total > 0 ? Math.round((stats.pmOnTime.length / total) * 100) : 100;
-  }, [stats]);
-
   return (
-    <div className="p-6 space-y-8 bg-[#F8FAFC] min-h-full font-sans">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 bg-[#F8FAFC] min-h-full font-sans">
       
       {/* HEADER SECTION */}
-      <div className="bg-white p-4 sm:p-8 rounded-3xl sm:rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 sm:gap-8">
-        <div className="flex items-center gap-4 sm:gap-6">
-          <div className="bg-gradient-to-tr from-indigo-600 to-indigo-500 p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] shadow-lg sm:shadow-xl shadow-indigo-100/50 text-white shrink-0">
-            <BarChart3 className="w-6 h-6 sm:w-10 sm:h-10" />
+      <div className="bg-white p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-5">
+          <div className="bg-gradient-to-tr from-indigo-600 to-indigo-500 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg shadow-indigo-100/50 text-white shrink-0">
+            <BarChart3 className="w-5 h-5 sm:w-8 sm:h-8" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tighter uppercase flex flex-wrap items-center gap-1.5 sm:gap-3 leading-tight">
+            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tighter uppercase flex flex-wrap items-center gap-1.5 sm:gap-2 leading-tight">
               Rapports <span className="text-indigo-600">d'Activité</span>
             </h2>
-            <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-1 leading-normal">
+            <p className="text-[7.5px] sm:text-[9.5px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 leading-tight">
               Bilan complet des interventions et des délais de traitement
             </p>
           </div>
         </div>
 
         {/* CONTROLLER BAR */}
-        <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3 w-full xl:w-auto">
           {/* Period type switcher */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl">
+          <div className="flex items-center justify-center gap-1 bg-slate-100 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shrink-0 w-full sm:w-auto">
             {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => setPeriodType(type)}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${
+                className={`flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black uppercase transition-all cursor-pointer ${
                   periodType === type 
-                    ? 'bg-slate-950 text-white shadow-md' 
+                    ? 'bg-slate-950 text-white shadow-xs' 
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -380,94 +375,100 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
             ))}
           </div>
 
-          {/* Date Selector and navigation */}
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/50 p-2.5 rounded-2xl shadow-inner shrink-0">
-            <button 
-              onClick={() => handleNavigatePeriod('PREV')} 
-              className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            
-            <div className="flex flex-col items-center px-2">
-              <input 
-                type="date" 
-                value={selectedDate} 
-                onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                className="bg-transparent border-none text-xs font-black text-indigo-600 outline-none focus:ring-0 cursor-pointer text-center p-0"
-              />
+          {/* Date Selector & Export XLS grouped on the SAME LINE (Adjusted side-by-side on mobile) */}
+          <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:gap-2.5 sm:w-auto shrink-0">
+            {/* Date Selector and navigation */}
+            <div className="flex items-center justify-between gap-1 bg-slate-50 border border-slate-200 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-2xs w-full sm:w-auto shrink-0">
+              <button 
+                onClick={() => handleNavigatePeriod('PREV')} 
+                className="p-1 hover:bg-slate-200 rounded-md sm:rounded-lg transition-colors text-slate-600 cursor-pointer shrink-0"
+                title="Période précédente"
+              >
+                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+              
+              <div className="flex items-center justify-center px-0.5 sm:px-1 flex-1 min-w-0">
+                <input 
+                  type="date" 
+                  value={selectedDate} 
+                  onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                  className="w-full bg-transparent border-none text-[11px] sm:text-xs font-black text-indigo-600 outline-none focus:ring-0 cursor-pointer text-center p-0"
+                />
+              </div>
+
+              <button 
+                onClick={() => handleNavigatePeriod('NEXT')} 
+                className="p-1 hover:bg-slate-200 rounded-md sm:rounded-lg transition-colors text-slate-600 cursor-pointer shrink-0"
+                title="Période suivante"
+              >
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
             </div>
 
-            <button 
-              onClick={() => handleNavigatePeriod('NEXT')} 
-              className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
+            {/* Export XLS on same line */}
+            <button
+              onClick={handleExportXls}
+              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black tracking-wider shadow-xs shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer w-full sm:w-auto shrink-0 whitespace-nowrap"
+              title="Exporter les données d'activité sous format Excel"
             >
-              <ChevronRight className="w-4 h-4" />
+              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span>EXPORTER XLS</span>
             </button>
           </div>
-
-          {/* Export XLS */}
-          <button
-            onClick={handleExportXls}
-            className="flex items-center gap-2 px-5 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black tracking-wider shadow-lg shadow-emerald-100 transition-all cursor-pointer w-full sm:w-auto justify-center"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            EXPORTER XLS
-          </button>
         </div>
       </div>
 
-      {/* PERIOD ACTIVE METRIC */}
-      <div className="bg-slate-900 text-white p-6 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-800 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-indigo-500/15 rounded-xl border border-indigo-500/20 text-indigo-400">
-            <Calendar className="w-5 h-5" />
+      {/* PERIOD ACTIVE METRIC BANNER */}
+      <div className="bg-slate-900 text-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border border-slate-800 shadow-md">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-2.5 bg-indigo-500/15 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Rapport consolidé pour la période</span>
-            <h3 className="text-lg font-black uppercase tracking-tight">{formattedPeriodLabel}</h3>
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-400 tracking-wider">Rapport consolidé pour la période</span>
+            <h3 className="text-sm sm:text-base font-black uppercase tracking-tight">{formattedPeriodLabel}</h3>
           </div>
         </div>
         
-        <div className="flex gap-4">
-          <div className="text-center bg-slate-800/50 px-6 py-3 rounded-2xl border border-slate-800/40 min-w-[120px]">
-            <p className="text-[9px] font-black text-slate-400 uppercase">SWO Créés</p>
-            <p className="text-2xl font-black text-indigo-300 mt-1">{stats.createdSwo.length}</p>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="text-center bg-slate-800/50 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-800/40 min-w-0 sm:min-w-[110px]">
+            <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase">SWO Créés</p>
+            <p className="text-lg sm:text-2xl font-black text-indigo-300 mt-0.5">{stats.createdSwo.length}</p>
           </div>
-          <div className="text-center bg-slate-800/50 px-6 py-3 rounded-2xl border border-slate-800/40 min-w-[120px]">
-            <p className="text-[9px] font-black text-slate-400 uppercase">SWO Clos</p>
-            <p className="text-2xl font-black text-emerald-400 mt-1">{stats.closedSwo.length}</p>
+          <div className="text-center bg-slate-800/50 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-800/40 min-w-0 sm:min-w-[110px]">
+            <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase">SWO Clos</p>
+            <p className="text-lg sm:text-2xl font-black text-emerald-400 mt-0.5">{stats.closedSwo.length}</p>
           </div>
         </div>
       </div>
 
-      {/* MAIN METRIC BENTO GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* MAIN METRIC BENTO GRID (Reduced squares) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* CARD 1: SWO CREATED VS CLOSED */}
         <div 
           onClick={() => setActiveDetailFilter('SWO_CLOSED')}
-          className={`cursor-pointer p-6 rounded-[2.5rem] border transition-all duration-300 flex flex-col justify-between h-72 relative overflow-hidden group ${
+          className={`cursor-pointer p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col justify-between min-h-[160px] sm:min-h-[190px] h-auto sm:h-56 relative overflow-hidden group ${
             activeDetailFilter.startsWith('SWO_')
-              ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-500/10'
-              : 'bg-white border-slate-100 hover:border-slate-300 shadow-sm'
+              ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10'
+              : 'bg-white border-slate-100 hover:border-slate-300 shadow-2xs'
           }`}
         >
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] font-black px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg uppercase tracking-wider">Mouvement SWO</span>
-              <FileText className="w-5 h-5 text-indigo-400" />
+            <div className="flex justify-between items-start mb-2 sm:mb-3">
+              <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md uppercase tracking-wider">Mouvement SWO</span>
+              <FileText className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400" />
             </div>
-            <h4 className="font-black text-slate-800 uppercase text-xs tracking-tight">SWO Créés vs Clôturés</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Analyse du flux de tickets</p>
+            <h4 className="font-black text-slate-800 uppercase text-[11px] sm:text-xs tracking-tight">SWO Créés vs Clôturés</h4>
+            <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Analyse du flux de tickets</p>
           </div>
 
-          <div className="space-y-4 my-2">
-            <div className="flex justify-between text-xs font-black">
+          <div className="space-y-2 sm:space-y-3 my-1">
+            <div className="flex justify-between text-[11px] sm:text-xs font-black">
               <span className="text-indigo-600">Créés: {stats.createdSwo.length}</span>
               <span className="text-emerald-600">Clos: {stats.closedSwo.length}</span>
             </div>
-            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
+            <div className="w-full h-2 sm:h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
               <div 
                 className="bg-indigo-500 h-full transition-all" 
                 style={{ width: `${stats.createdSwo.length + stats.closedSwo.length > 0 ? (stats.createdSwo.length / (stats.createdSwo.length + stats.closedSwo.length)) * 100 : 50}%` }} 
@@ -479,184 +480,184 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-dashed flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
+          <div className="pt-1.5 sm:pt-2 border-t border-dashed flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase">
             <span>Cliquez pour détailler</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="w-3 h-3 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
         {/* CARD 2: COURROIES REPLACED VS CREATED */}
         <div 
           onClick={() => setActiveDetailFilter('BELT_REPLACED')}
-          className={`cursor-pointer p-6 rounded-[2.5rem] border transition-all duration-300 flex flex-col justify-between h-72 relative overflow-hidden group ${
+          className={`cursor-pointer p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col justify-between min-h-[160px] sm:min-h-[190px] h-auto sm:h-56 relative overflow-hidden group ${
             activeDetailFilter.startsWith('BELT_')
-              ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-500/10'
-              : 'bg-white border-slate-100 hover:border-slate-300 shadow-sm'
+              ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10'
+              : 'bg-white border-slate-100 hover:border-slate-300 shadow-2xs'
           }`}
         >
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] font-black px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg uppercase tracking-wider">Organes Moteur</span>
-              <Settings2 className="w-5 h-5 text-slate-500" />
+            <div className="flex justify-between items-start mb-2 sm:mb-3">
+              <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase tracking-wider">Organes Moteur</span>
+              <Settings2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-500" />
             </div>
-            <h4 className="font-black text-slate-800 uppercase text-xs tracking-tight">Courroie Remplacée vs Créée</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Maintenance des courroies</p>
+            <h4 className="font-black text-slate-800 uppercase text-[11px] sm:text-xs tracking-tight">Courroie Remplacée vs Créée</h4>
+            <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Maintenance des courroies</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Remplacées</span>
-              <span className="text-xl font-black text-slate-800">{stats.replacedBelt.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Remplacées</span>
+              <span className="text-base sm:text-xl font-black text-slate-800">{stats.replacedBelt.length}</span>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Créées (Swo)</span>
-              <span className="text-xl font-black text-indigo-600">{stats.createdBelt.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Créées (Swo)</span>
+              <span className="text-base sm:text-xl font-black text-indigo-600">{stats.createdBelt.length}</span>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-dashed flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
+          <div className="pt-1.5 sm:pt-2 border-t border-dashed flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase">
             <span>Cliquez pour détailler</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="w-3 h-3 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
         {/* CARD 3: BATTERY REPLACED VS CREATED */}
         <div 
           onClick={() => setActiveDetailFilter('BATTERY_REPLACED')}
-          className={`cursor-pointer p-6 rounded-[2.5rem] border transition-all duration-300 flex flex-col justify-between h-72 relative overflow-hidden group ${
+          className={`cursor-pointer p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col justify-between min-h-[160px] sm:min-h-[190px] h-auto sm:h-56 relative overflow-hidden group ${
             activeDetailFilter.startsWith('BATTERY_')
-              ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-500/10'
-              : 'bg-white border-slate-100 hover:border-slate-300 shadow-sm'
+              ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10'
+              : 'bg-white border-slate-100 hover:border-slate-300 shadow-2xs'
           }`}
         >
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] font-black px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg uppercase tracking-wider">Batteries</span>
-              <BatteryIcon className="w-5 h-5 text-amber-500" />
+            <div className="flex justify-between items-start mb-2 sm:mb-3">
+              <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md uppercase tracking-wider">Batteries</span>
+              <BatteryIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-500" />
             </div>
-            <h4 className="font-black text-slate-800 uppercase text-xs tracking-tight">Batterie Remplacée vs Créée</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Suivi du parc batteries</p>
+            <h4 className="font-black text-slate-800 uppercase text-[11px] sm:text-xs tracking-tight">Batterie Remplacée vs Créée</h4>
+            <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Suivi du parc batteries</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Remplacées</span>
-              <span className="text-xl font-black text-slate-800">{stats.replacedBattery.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Remplacées</span>
+              <span className="text-base sm:text-xl font-black text-slate-800">{stats.replacedBattery.length}</span>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Créées (Swo)</span>
-              <span className="text-xl font-black text-amber-600">{stats.createdBattery.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Créées (Swo)</span>
+              <span className="text-base sm:text-xl font-black text-amber-600">{stats.createdBattery.length}</span>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-dashed flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
+          <div className="pt-1.5 sm:pt-2 border-t border-dashed flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase">
             <span>Cliquez pour détailler</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="w-3 h-3 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
         {/* CARD 4: TAS IN DELAY VS OUT OF DELAY */}
         <div 
           onClick={() => setActiveDetailFilter('TAS_ON_TIME')}
-          className={`cursor-pointer p-6 rounded-[2.5rem] border transition-all duration-300 flex flex-col justify-between h-72 relative overflow-hidden group ${
+          className={`cursor-pointer p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col justify-between min-h-[160px] sm:min-h-[190px] h-auto sm:h-56 relative overflow-hidden group ${
             activeDetailFilter.startsWith('TAS_')
-              ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-500/10'
-              : 'bg-white border-slate-100 hover:border-slate-300 shadow-sm'
+              ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/10'
+              : 'bg-white border-slate-100 hover:border-slate-300 shadow-2xs'
           }`}
         >
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] font-black px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg uppercase tracking-wider">SLA TAS</span>
-              <ClipboardList className="w-5 h-5 text-emerald-500" />
+            <div className="flex justify-between items-start mb-2 sm:mb-3">
+              <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md uppercase tracking-wider">SLA TAS</span>
+              <ClipboardList className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-500" />
             </div>
-            <h4 className="font-black text-slate-800 uppercase text-xs tracking-tight">TAS dans le Délai vs Hors</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Qualité de traitement (SLA {tasSlaThreshold}j)</p>
+            <h4 className="font-black text-slate-800 uppercase text-[11px] sm:text-xs tracking-tight">TAS dans le Délai vs Hors</h4>
+            <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Qualité de traitement (SLA {tasSlaThreshold}j)</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-black text-emerald-600 uppercase">Respecté ({tasComplianceRate}%)</span>
-              <span className="text-xl font-black text-emerald-600">{stats.tasOnTime.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase">Respecté ({tasComplianceRate}%)</span>
+              <span className="text-base sm:text-xl font-black text-emerald-600">{stats.tasOnTime.length}</span>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-[10px] font-black text-rose-500 uppercase">Hors délai</span>
-              <span className="text-xl font-black text-rose-500">{stats.tasLate.length}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase">Hors délai</span>
+              <span className="text-base sm:text-xl font-black text-rose-500">{stats.tasLate.length}</span>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-dashed flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
+          <div className="pt-1.5 sm:pt-2 border-t border-dashed flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase">
             <span>Cliquez pour détailler</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="w-3 h-3 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
       </div>
 
       {/* PARAMETERS AND SLA CONFIGURATION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* TAS SLA Box */}
-        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-100 p-2.5 rounded-xl text-slate-600">
-              <Clock className="w-5 h-5" />
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 shadow-2xs">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="bg-slate-100 p-2 sm:p-2.5 rounded-xl text-slate-600 shrink-0">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Ajuster le Seuil SLA Administratif TAS</h4>
-              <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Configurez le délai de traitement des TAS</p>
+              <h4 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider">Ajuster le Seuil SLA Administratif TAS</h4>
+              <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Configurez le délai de traitement des TAS</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/40 px-4 py-2 rounded-xl">
-            <span className="text-xs font-black text-slate-500 uppercase">Seuil :</span>
+          <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/50 px-3 py-1.5 rounded-xl shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+            <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Seuil :</span>
             <input 
               type="number" 
               min={1} 
               max={30} 
               value={tasSlaThreshold} 
               onChange={(e) => setTasSlaThreshold(Math.max(1, parseInt(e.target.value) || 3))}
-              className="w-14 text-center bg-transparent border-none text-xs font-black text-indigo-600 outline-none p-0 focus:ring-0"
+              className="w-12 text-center bg-transparent border-none text-[11px] sm:text-xs font-black text-indigo-600 outline-none p-0 focus:ring-0"
             />
-            <span className="text-xs font-black text-slate-400">jours</span>
+            <span className="text-[10px] sm:text-xs font-black text-slate-400">jours</span>
           </div>
         </div>
 
         {/* Priority SLA Thresholds explanation */}
-        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col justify-center gap-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="bg-rose-50 text-rose-500 p-2 rounded-xl">
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 flex flex-col justify-center gap-2.5 sm:gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="bg-rose-50 text-rose-500 p-1.5 sm:p-2 rounded-xl shrink-0">
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Seuils de Tolérance SLA TTF (Priorités SWO)</h4>
-              <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Les dossiers dépassant ces durées seront automatiquement mis en évidence en rouge</p>
+              <h4 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider">Seuils de Tolérance SLA TTF (Priorités SWO)</h4>
+              <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase mt-0.5">Les dossiers dépassant ces durées seront automatiquement mis en évidence en rouge</p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="text-[9px] font-black px-2 py-1 bg-rose-50 text-rose-800 rounded-md border border-rose-100">P0 &lt; 24h</span>
-            <span className="text-[9px] font-black px-2 py-1 bg-orange-50 text-orange-800 rounded-md border border-orange-100">P1 &lt; 72h</span>
-            <span className="text-[9px] font-black px-2 py-1 bg-amber-50 text-amber-800 rounded-md border border-amber-100">P2 &lt; 168h (7j)</span>
-            <span className="text-[9px] font-black px-2 py-1 bg-sky-50 text-sky-800 rounded-md border border-sky-100">P3 &lt; 720h (30j)</span>
-            <span className="text-[9px] font-black px-2 py-1 bg-slate-100 text-slate-500 rounded-md border border-slate-200">P4 Sans Limite</span>
+          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-rose-50 text-rose-800 rounded-md border border-rose-100">P0 &lt; 24h</span>
+            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-orange-50 text-orange-800 rounded-md border border-orange-100">P1 &lt; 72h</span>
+            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-amber-50 text-amber-800 rounded-md border border-amber-100">P2 &lt; 168h (7j)</span>
+            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-sky-50 text-sky-800 rounded-md border border-sky-100">P3 &lt; 720h (30j)</span>
+            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200">P4 Sans Limite</span>
           </div>
         </div>
       </div>
 
       {/* DETAILED ACTIVE METRIC LIST */}
-      <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
-        <div className="p-8 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-indigo-50 p-3.5 rounded-2xl text-indigo-600">
-              <ClipboardList className="w-6 h-6" />
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
+        <div className="p-4 sm:p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="bg-indigo-50 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl text-indigo-600 shrink-0">
+              <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+              <h3 className="text-base sm:text-xl font-black text-slate-800 uppercase tracking-tighter flex flex-wrap items-center gap-1.5 sm:gap-2">
                 Détail : <span className="text-indigo-600 font-black uppercase">
                   {activeDetailFilter === 'SWO_CREATED' && 'SWO Créés'}
                   {activeDetailFilter === 'SWO_CLOSED' && 'SWO Fermés'}
-                  {activeDetailFilter === 'BELT_CREATED' && 'Courroies - SWO de Remplacement Créés'}
+                  {activeDetailFilter === 'BELT_CREATED' && 'Courroies - SWO Créés'}
                   {activeDetailFilter === 'BELT_REPLACED' && 'Courroies Remplacées'}
-                  {activeDetailFilter === 'BATTERY_CREATED' && 'Batteries - SWO de Remplacement Créés'}
+                  {activeDetailFilter === 'BATTERY_CREATED' && 'Batteries - SWO Créés'}
                   {activeDetailFilter === 'BATTERY_REPLACED' && 'Batteries Remplacées'}
                   {activeDetailFilter === 'TAS_ON_TIME' && 'TAS Clos dans le Délai'}
                   {activeDetailFilter === 'TAS_LATE' && 'TAS Clos Hors Délai'}
@@ -664,18 +665,18 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
                   {activeDetailFilter === 'PM_LATE' && 'PM Clos Hors Délai / Replanifiés'}
                 </span>
               </h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+              <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
                 {filteredDetailList.length} dossier(s) trouvé(s) sur cette période
               </p>
             </div>
           </div>
 
           <div className="relative w-full lg:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
               placeholder="Rechercher par Site, SWO..." 
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border-none rounded-xl sm:rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
               value={detailSearchTerm}
               onChange={(e) => setDetailSearchTerm(e.target.value)}
             />
@@ -686,15 +687,15 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">
-                <th className="px-8 py-5">Site ID</th>
-                <th className="px-6 py-5">Site & Région</th>
-                <th className="px-6 py-5">Priorité / SLA TTF</th>
-                <th className="px-6 py-5">N° SWO / PM Number</th>
-                <th className="px-6 py-5 max-w-xs">Description</th>
-                <th className="px-6 py-5">Intervenant</th>
-                <th className="px-6 py-5 whitespace-nowrap">Création / Planif</th>
-                <th className="px-8 py-5 text-right">Clôture / Exécution</th>
+              <tr className="bg-slate-50/50 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">
+                <th className="px-4 sm:px-6 py-3 sm:py-4">Site ID</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4">Site & Région</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4">Priorité / SLA TTF</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4">N° SWO / PM Number</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4 max-w-xs">Description</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4">Intervenant</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Création / Planif</th>
+                <th className="px-4 sm:px-6 py-3 sm:py-4 text-right">Clôture / Exécution</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -711,18 +712,18 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
                           : 'hover:bg-indigo-50/10 border-l-transparent'
                       }`}
                     >
-                      <td className="px-8 py-5">
-                        <span className="text-[11px] font-black text-slate-500 uppercase">{row["ID"] || "N/A"}</span>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
+                        <span className="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase">{row["ID"] || "N/A"}</span>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-black text-slate-900 uppercase leading-tight">{row["Nom du site"] || row["Names site"] || "Inconnu"}</span>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase mt-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> {row["Region"] || "Inconnue"}</span>
+                          <span className="text-xs sm:text-sm font-black text-slate-900 uppercase leading-tight">{row["Nom du site"] || row["Names site"] || "Inconnu"}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" /> {row["Region"] || "Inconnue"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <div className="flex flex-col gap-1">
-                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg inline-block w-fit uppercase border ${
+                          <span className={`text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-md inline-block w-fit uppercase border ${
                             priority === 'P0' ? 'bg-rose-100/80 text-rose-800 border-rose-200' :
                             priority === 'P1' ? 'bg-orange-100/80 text-orange-800 border-orange-200' :
                             priority === 'P2' ? 'bg-amber-100/80 text-amber-800 border-amber-200' :
@@ -733,43 +734,43 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
                             {priority}
                           </span>
                           {durationHours !== null && limitHours !== Infinity && (
-                            <span className={`text-[9.5px] font-mono font-bold flex items-center gap-1 ${exceeded ? 'text-rose-600' : 'text-slate-500'}`}>
+                            <span className={`text-[9px] font-mono font-bold flex items-center gap-1 ${exceeded ? 'text-rose-600' : 'text-slate-500'}`}>
                               {exceeded && <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />}
                               {Math.round(durationHours)}h / {limitHours}h
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
                         {row["PM number"] ? (
                           <div className="flex flex-col">
-                            <span className="text-[11px] font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/60 inline-block w-fit">
+                            <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60 inline-block w-fit">
                               PM: {row["PM number"]}
                             </span>
-                            {row["N° SWO"] && <span className="text-[9px] text-slate-400 font-mono mt-1">SWO: {row["N° SWO"]}</span>}
+                            {row["N° SWO"] && <span className="text-[8px] sm:text-[9px] text-slate-400 font-mono mt-0.5">SWO: {row["N° SWO"]}</span>}
                           </div>
                         ) : (
-                          <span className="text-[11px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100/60 inline-block w-fit">
+                          <span className="text-[10px] sm:text-[11px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/60 inline-block w-fit">
                             SWO: {row["N° SWO"] || "N/A"}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-5 max-w-xs">
-                        <p className="text-[11px] text-slate-600 font-medium line-clamp-2 leading-relaxed italic">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 max-w-xs">
+                        <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium line-clamp-2 leading-relaxed italic">
                           {row["Description"] || row["Short description"] || "Pas de description."}
                         </p>
                       </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200">
-                            <User className="w-3.5 h-3.5 text-slate-500" />
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 shrink-0">
+                            <User className="w-3 h-3 text-slate-500" />
                           </div>
-                          <span className="text-[10px] font-black text-slate-700 uppercase">{row["Assigned to"] || row["Intervenant"] || row["FE names"] || "Non assigné"}</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-700 uppercase truncate max-w-[120px]">{row["Assigned to"] || row["Intervenant"] || row["FE names"] || "Non assigné"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-slate-800">
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-800">
                             {formatDate(row["Date de création du SWO"] || row["Date de remontée"] || row["PM Date"] || row["PM Planned"])}
                           </span>
                           <span className="text-[8px] font-bold text-slate-400 uppercase">
@@ -777,9 +778,9 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-8 py-5 text-right">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-right">
                         <div className="flex flex-col items-end">
-                          <span className={`text-[11px] font-black ${exceeded ? 'text-rose-600 font-bold' : 'text-emerald-600'}`}>
+                          <span className={`text-[10px] sm:text-[11px] font-black ${exceeded ? 'text-rose-600 font-bold' : 'text-emerald-600'}`}>
                             {formatDate(row["Closing date"] || row["Date de Clôture"] || row["PM date execute"] || row["Date executee"])}
                           </span>
                           <span className="text-[8px] font-bold text-slate-400 uppercase">
@@ -792,9 +793,9 @@ export const ActivityReport: React.FC<ActivityReportProps> = ({ data }) => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-8 py-20 text-center text-slate-300 italic opacity-40">
-                    <Search className="w-12 h-12 mx-auto mb-4" />
-                    <p className="text-sm font-black uppercase tracking-widest">Aucun dossier à afficher pour ce filtre</p>
+                  <td colSpan={8} className="px-6 py-16 text-center text-slate-300 italic opacity-40">
+                    <Search className="w-10 h-10 mx-auto mb-3" />
+                    <p className="text-xs sm:text-sm font-black uppercase tracking-widest">Aucun dossier à afficher pour ce filtre</p>
                   </td>
                 </tr>
               )}

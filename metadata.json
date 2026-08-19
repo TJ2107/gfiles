@@ -1,5 +1,8 @@
 {
   "name": "GLOBAL FILES Enterprise Edition SBD",
   "description": "Application de gestion et compilation de données Excel avec tableaux de bord analytiques et formatage conditionnel.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

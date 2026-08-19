@@ -100,6 +100,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   // Cloudflare D1 status & bypass states
   const [d1Status, setD1Status] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isCloudflareRemote, setIsCloudflareRemote] = useState<boolean>(false);
+  const [cfErrorMessage, setCfErrorMessage] = useState<string>('');
   const [forceD1Active, setForceD1Active] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('force_d1_active') === 'true';
@@ -107,12 +109,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     return false;
   });
 
-  // Check Cloudflare D1 Health
+  // Check Cloudflare D1 & Health
   useEffect(() => {
     const checkD1Health = async () => {
       try {
-        const res = await fetch('/api/d1/comments');
-        if (res.ok) {
+        const [healthRes, d1Res] = await Promise.all([
+          fetch('/api/health').catch(() => null),
+          fetch('/api/d1/comments').catch(() => null)
+        ]);
+
+        if (healthRes && healthRes.ok) {
+          const healthData = await healthRes.json();
+          setIsCloudflareRemote(!!healthData.cloudflareConfigured);
+          if (healthData.cloudflareError) {
+            setCfErrorMessage(healthData.cloudflareError);
+          }
+        }
+
+        if (d1Res && d1Res.ok) {
           setD1Status('online');
         } else {
           setD1Status('offline');
@@ -794,44 +808,47 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="flex items-center gap-2">
                           <Database className="w-5 h-5 text-indigo-500" />
                           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
-                            Base de Données Cloudflare D1
+                            Architecture Double Base : Firestore + Cloudflare D1
                           </h4>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
-                          Surveillez en direct l'état de synchronisation avec Cloudflare D1 ou forcez l'utilisation exclusive du moteur D1 pour soulager les quotas de lecture/écriture de Firebase Firestore.
+                          Surveillez l'état de synchronisation en direct. Le basculement automatique est actif : si Firebase sature son quota, vos données basculent sans coupure sur Cloudflare D1.
                         </p>
                       </div>
 
-                      {/* D1 Indicator and Badge */}
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border self-start sm:self-auto shrink-0 bg-slate-50 dark:bg-slate-950 border-slate-200/65 dark:border-slate-800">
-                        {d1Status === 'checking' && (
-                          <>
-                            <span className="flex h-2 w-2 relative">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                            </span>
-                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">D1: Diagnostic...</span>
-                          </>
-                        )}
-                        {d1Status === 'online' && (
-                          <>
-                            <span className="flex h-2 w-2 relative">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">D1: Connecté</span>
-                          </>
-                        )}
-                        {d1Status === 'offline' && (
-                          <>
-                            <span className="flex h-2 w-2 relative">
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                            </span>
-                            <span className="text-[9px] font-bold text-rose-500 uppercase tracking-widest">D1: Limité / Local</span>
-                          </>
-                        )}
+                      {/* Dual DB Badges */}
+                      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
+                        {/* Firestore Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                          <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Firestore : En direct</span>
+                        </div>
+
+                        {/* Cloudflare Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-slate-50 dark:bg-slate-950 border-slate-200/65 dark:border-slate-800">
+                          {isCloudflareRemote ? (
+                            <>
+                              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Cloudflare D1 : Distant</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className={`flex h-1.5 w-1.5 rounded-full ${d1Status === 'online' ? 'bg-indigo-500' : 'bg-amber-500'}`}></span>
+                              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                                {d1Status === 'online' ? 'D1 : Relais Local Actif' : 'D1 : Initialisation...'}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {cfErrorMessage && (
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs rounded-xl flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{cfErrorMessage}</span>
+                      </div>
+                    )}
 
                     {/* Toggle Switch */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

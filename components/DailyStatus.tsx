@@ -355,9 +355,9 @@ export const DailyStatus: React.FC<DailyStatusProps> = ({ data, onFilterChange, 
                   </div>
                </div>
             </div>
-            <div className="w-full md:w-48 h-48 shrink-0 flex flex-col items-center justify-center relative">
-               <div className="w-full h-full relative">
-                 <ResponsiveContainer width="99%" height={180}>
+            <div className="w-full md:w-48 h-48 shrink-0 flex flex-col items-center justify-center relative min-h-[180px] min-w-0">
+               <div className="w-full h-full relative min-h-[180px] min-w-0">
+                 <ResponsiveContainer width="100%" height={180} minWidth={0} minHeight={150}>
                     <PieChart>
                        <Pie 
                          data={[
@@ -473,8 +473,8 @@ export const DailyStatus: React.FC<DailyStatusProps> = ({ data, onFilterChange, 
                   <h3 className="font-black text-gray-400 text-xs uppercase">{toDisplayDate(dateLeft)}</h3>
                   <button onClick={() => downloadChartAsJpg(chartLeftRef, 'daily_left')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors"><Camera className="w-5 h-5" /></button>
                 </div>
-                <div className="h-[320px] w-full relative">
-                  <ResponsiveContainer width="99%" height={320}>
+                <div className="h-[320px] w-full min-h-[320px] min-w-0 relative">
+                  <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={250}>
                     <BarChart data={leftData} margin={{bottom: 60}} onClick={(e) => handleChartClick(e, dateLeft)} className="cursor-pointer">
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                       <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={10} tick={{fill: '#9ca3af', fontWeight: 'bold'}} />
@@ -491,8 +491,8 @@ export const DailyStatus: React.FC<DailyStatusProps> = ({ data, onFilterChange, 
                   <h3 className="font-black text-indigo-600 text-xs uppercase">{toDisplayDate(dateRight)}</h3>
                   <button onClick={() => downloadChartAsJpg(chartRightRef, 'daily_right')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors"><Camera className="w-5 h-5" /></button>
                 </div>
-                <div className="h-[320px] w-full relative">
-                  <ResponsiveContainer width="99%" height={320}>
+                <div className="h-[320px] w-full min-h-[320px] min-w-0 relative">
+                  <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={250}>
                     <BarChart data={rightData} margin={{bottom: 60}} onClick={(e) => handleChartClick(e, dateRight)} className="cursor-pointer">
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                       <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={10} tick={{fill: '#9ca3af', fontWeight: 'bold'}} />

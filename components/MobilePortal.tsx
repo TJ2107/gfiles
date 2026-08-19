@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
-  Layout, Database, PieChart, Calendar, Timer, 
+  Database, PieChart, Calendar, Timer, 
   Briefcase, Battery, Settings2, Download, Settings, 
-  Users, BarChart3, ClipboardList, Layers,
-  Search, ShieldCheck, HelpCircle, ArrowRight
+  BarChart3, ClipboardList, Layers,
+  Search, ShieldCheck, HelpCircle, ArrowRight, Package
 } from 'lucide-react';
+import { DatabaseStatusIndicators } from './DatabaseStatusIndicators';
+import { GFLogo } from './GFLogo';
 
 interface MobilePortalProps {
   role: string | null;
@@ -143,6 +145,17 @@ const MODULES: ModuleItem[] = [
     minRole: 'User'
   },
   {
+    id: 'gmao_stock',
+    label: 'Stock & GMAO',
+    description: "Suivi des pièces remplacées, consommations et calibrations.",
+    icon: Package,
+    colorClass: 'text-cyan-500 bg-cyan-500/10',
+    bgClass: 'from-cyan-50/50 to-white dark:from-cyan-950/20 dark:to-slate-900',
+    borderClass: 'border-cyan-100 dark:border-cyan-900/50',
+    category: 'technique',
+    minRole: 'User'
+  },
+  {
     id: 'export',
     label: "Pôle d'Exportation",
     description: 'Télécharger les données filtrées au format Excel ou PDF.',
@@ -223,10 +236,15 @@ export const MobilePortal: React.FC<MobilePortalProps> = (props) => {
         <div className="absolute left-1/4 bottom-0 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col gap-4">
-          <div className="flex justify-between items-start flex-wrap gap-2">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Portail Applicatif</span>
-              <h2 className="text-2xl font-black tracking-tight mt-1 uppercase">Menu des Modules</h2>
+          <div className="flex justify-between items-start flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shrink-0 flex items-center justify-center">
+                <GFLogo className="w-full h-full" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Portail Applicatif</span>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">Menu des Modules</h2>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className={`text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 ${roleLabel.color}`}>
@@ -350,6 +368,14 @@ export const MobilePortal: React.FC<MobilePortalProps> = (props) => {
           </div>
         </div>
       )}
+
+      {/* Footer avec voyants de statut de base de données et copyright */}
+      <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <DatabaseStatusIndicators className="w-full sm:w-auto" />
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+          © 2026 Empreintes Tech.
+        </p>
+      </div>
     </div>
   );
 };

@@ -17,17 +17,21 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { SettingsPanel } from './components/SettingsPanel';
 import { MigrationAssistant } from './components/MigrationAssistant';
 import { MobilePortal } from './components/MobilePortal';
+import { CopilotIA } from './components/CopilotIA';
+import { GMAOStockTracker } from './components/GMAOStockTracker';
 import { DataUpdateNotification, DataUpdateStats } from './components/DataUpdateNotification';
 import { CommandPalette } from './components/CommandPalette';
 import { ExecutiveBriefModal } from './components/ExecutiveBriefModal';
+import { DatabaseStatusIndicators } from './components/DatabaseStatusIndicators';
 import { computeDataDiffStats } from './utils/dataDiff';
+import { GFLogo } from './components/GFLogo';
 import { 
   Layout, Database, PieChart, Calendar, Timer, 
   Briefcase, Battery, Settings2, Loader2, Layers, 
   Download, Settings, Menu, X, ChevronRight, ClipboardList,
   PanelLeftClose, PanelLeftOpen,
-  Bell, ArrowRight, ShieldAlert, LogOut, Users, BarChart3,
-  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, FileCheck, Star
+  Bell, ArrowRight, ShieldAlert, LogOut, BarChart3,
+  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, Star, Package
 } from 'lucide-react';
 
 import { parseDate } from './utils/dateHelpers';
@@ -35,7 +39,7 @@ import { parseDate } from './utils/dateHelpers';
 import { useAuth } from './components/AuthProvider';
 import { LoginView } from './components/LoginView';
 import { logout, updatePresence } from './firebase';
-import { saveToFirebase, fetchFromFirebase, getActiveDataSource, DataSourceType } from './firebaseData';
+import { saveToFirebase, fetchFromFirebase } from './firebaseData';
 
 const App: React.FC = () => {
   const { user, role } = useAuth();
@@ -46,7 +50,6 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [currentSource, setCurrentSource] = useState<DataSourceType>(() => getActiveDataSource());
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme_mode') as 'light' | 'dark' | 'system') || 'system';
@@ -68,6 +71,7 @@ const App: React.FC = () => {
   const [updateNotificationStats, setUpdateNotificationStats] = useState<DataUpdateStats | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isExecutiveBriefOpen, setIsExecutiveBriefOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [favoriteModules, setFavoriteModules] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('user_favorite_modules');
@@ -100,6 +104,7 @@ const App: React.FC = () => {
       case 'tas': return { label: 'Analyse TAS', icon: ClipboardList, iconBg: 'from-amber-600 to-yellow-600' };
       case 'battery': return { label: 'Parc Batteries', icon: Battery, iconBg: 'from-emerald-500 to-green-700' };
       case 'belt': return { label: 'Audit Courroies', icon: Settings2, iconBg: 'from-slate-600 to-slate-800' };
+      case 'gmao': return { label: 'Stock & GMAO', icon: Package, iconBg: 'from-amber-600 to-amber-700' };
       case 'export': return { label: "Pôle d'Exportation", icon: Download, iconBg: 'from-sky-500 to-indigo-600' };
       default: return null;
     }
@@ -131,20 +136,6 @@ const App: React.FC = () => {
     };
     window.addEventListener('firestore-quota-exceeded', handleQuotaExceeded);
     return () => window.removeEventListener('firestore-quota-exceeded', handleQuotaExceeded);
-  }, []);
-
-  // Listen to active data source changes (Firebase vs Cloudflare D1)
-  useEffect(() => {
-    const handleSourceChange = (e: Event) => {
-      const customEvent = e as CustomEvent<DataSourceType>;
-      if (customEvent.detail) {
-        setCurrentSource(customEvent.detail);
-      } else {
-        setCurrentSource(getActiveDataSource());
-      }
-    };
-    window.addEventListener('data-source-changed', handleSourceChange);
-    return () => window.removeEventListener('data-source-changed', handleSourceChange);
   }, []);
 
   // Helper to notify locally and broadcast to all open sessions / tabs
@@ -642,79 +633,8 @@ const App: React.FC = () => {
 
           <div className={`pt-6 pb-4 px-4 flex flex-col items-center transition-all ${isSidebarCollapsed ? 'px-2' : ''}`}>
             <div className="flex items-center gap-3 w-full px-2 py-3 border-b border-slate-900/80 mb-4 justify-start">
-              <div className="bg-white p-1 rounded-xl flex items-center justify-center relative shadow-md w-12 h-12 shrink-0 border border-slate-800/50">
-                <svg viewBox="0 0 500 500" className="w-full h-full">
-                  <defs>
-                    <radialGradient id="bg-grad-sidebar" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#1e3a8a" />
-                      <stop offset="100%" stopColor="#0f172a" />
-                    </radialGradient>
-
-                    <linearGradient id="tech-blue-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#38bdf8" />
-                      <stop offset="100%" stopColor="#818cf8" />
-                    </linearGradient>
-
-                    <linearGradient id="glow-white-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ffffff" />
-                      <stop offset="100%" stopColor="#cbd5e1" />
-                    </linearGradient>
-
-                    <filter id="glow-sidebar" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="4" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-
-                  {/* Dark Tech Background Badge */}
-                  <circle cx="250" cy="250" r="220" fill="url(#bg-grad-sidebar)" stroke="#38bdf8" strokeWidth="4" strokeOpacity="0.4" />
-                  <circle cx="250" cy="250" r="212" fill="none" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.1" />
-
-                  {/* Cloud Outline */}
-                  <path d="M 160 280 A 45 45 0 0 1 180 195 A 65 65 0 0 1 305 175 A 50 50 0 0 1 350 250 A 40 40 0 0 1 330 320 L 170 320 A 40 40 0 0 1 160 280 Z" 
-                        fill="none" 
-                        stroke="url(#tech-blue-sidebar)" 
-                        strokeWidth="3" 
-                        strokeDasharray="8 4"
-                        opacity="0.5" />
-
-                  {/* Data Circuit Lines */}
-                  <g stroke="url(#tech-blue-sidebar)" strokeWidth="2" opacity="0.6" fill="none">
-                    <path d="M 130 250 L 170 250 M 150 220 L 180 220 M 330 220 L 370 220 M 320 270 L 360 270" />
-                    <path d="M 210 140 L 210 170 M 290 135 L 290 165" />
-                  </g>
-
-                  {/* Main 'GF' Monogram */}
-                  <g filter="url(#glow-sidebar)">
-                    <path d="M 225 210 C 180 200, 150 230, 150 265 C 150 305, 185 325, 225 315 L 225 270 L 195 270" 
-                          fill="none" 
-                          stroke="url(#glow-white-sidebar)" 
-                          strokeWidth="14" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" />
-
-                    <path d="M 265 315 L 265 210 L 325 210 M 265 260 L 310 260" 
-                          fill="none" 
-                          stroke="url(#tech-blue-sidebar)" 
-                          strokeWidth="14" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" />
-                  </g>
-
-                  {/* Data Nodes */}
-                  <g fill="#38bdf8">
-                    <circle cx="195" cy="270" r="5" />
-                    <circle cx="325" cy="210" r="5" />
-                    <circle cx="310" cy="260" r="5" />
-                    <circle cx="130" cy="250" r="4" />
-                    <circle cx="370" cy="220" r="4" />
-                    <circle cx="210" cy="140" r="4" />
-                  </g>
-                  <g fill="#ffffff">
-                    <circle cx="225" cy="210" r="5" />
-                    <circle cx="265" cy="315" r="5" />
-                  </g>
-                </svg>
+              <div className="rounded-xl flex items-center justify-center relative shadow-md w-11 h-11 shrink-0 overflow-hidden">
+                <GFLogo className="w-full h-full drop-shadow-md" />
               </div>
               {!isSidebarCollapsed && (
                 <div className="text-left">
@@ -773,6 +693,7 @@ const App: React.FC = () => {
                 <NavButton id="tas" label="Analyse TAS" icon={ClipboardList} iconBg="from-amber-600 to-yellow-600" />
                 <NavButton id="battery" label="Parc Batteries" icon={Battery} iconBg="from-emerald-500 to-green-700" />
                 <NavButton id="belt" label="Audit Courroies" icon={Settings2} iconBg="from-slate-600 to-slate-800" />
+                <NavButton id="gmao" label="Stock & GMAO" icon={Package} isNew={true} iconBg="from-amber-600 to-amber-700" />
                 <div className="h-px bg-slate-900/80 my-3 mx-2"></div>
                 <NavButton id="export" label="Pôle d'Exportation" icon={Download} iconBg="from-sky-500 to-indigo-600" />
                 <NavButton id="settings" label="Paramètres du Système" icon={Settings} colorClass="bg-red-500/10 text-red-300 border border-red-950" iconBg="from-red-600 to-rose-800" />
@@ -826,8 +747,11 @@ const App: React.FC = () => {
                  </span>
                )}
             </button>
+            <div className="w-full mt-2">
+              <DatabaseStatusIndicators isCompact={isSidebarCollapsed} />
+            </div>
             {!isSidebarCollapsed && (
-              <div className="text-center mt-2">
+              <div className="text-center mt-1.5">
                 <p className="text-[9px] text-slate-500 font-medium">© 2026 Empreintes Tech.</p>
               </div>
             )}
@@ -932,110 +856,72 @@ const App: React.FC = () => {
         )}
 
         {/* Sleek top header for both mobile, tablet & desktop */}
-        <header className="bg-white border-b border-slate-200/60 px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6 lg:py-3.5 flex justify-between items-center z-50 transition-colors shrink-0 w-full">
-          <div className="flex items-center gap-2">
+        <header className="bg-white border-b border-slate-200/80 px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex justify-between items-center z-50 transition-all shrink-0 w-full gap-3 min-h-[56px] sm:min-h-[60px]">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {!isMobileOrTablet && (
-              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1.5 text-slate-600 hover:text-slate-900 transition-colors"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1.5 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer" title="Ouvrir le menu"><Menu className="w-5 h-5" /></button>
             )}
             {isMobileOrTablet && activeTab !== 'portal' && data.length > 0 && (
               <button 
                 onClick={() => setActiveTab('portal')}
-                className="flex items-center justify-center p-1.5 sm:p-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+                className="flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all duration-200 active:scale-95 shadow-2xs shrink-0 cursor-pointer"
                 title="Retour au menu Modules"
               >
-                <ArrowLeft className="w-4 h-4 stroke-[2.5] animate-pulse" />
+                <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
               </button>
             )}
-            <div className="hidden lg:flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Moteur Opérationnel</span>
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+                <GFLogo className="w-full h-full" />
               </div>
-
-              {/* Discrete DB Connection Status Voyant (Dot only with tooltip) */}
-              <div 
-                className="flex items-center justify-center p-1 cursor-help"
-                title={`Source de données active : ${currentSource}`}
-              >
-                <span className="flex h-2.5 w-2.5 relative">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    currentSource === 'Firebase' ? 'bg-emerald-400' : currentSource === 'Cloudflare D1' ? 'bg-amber-400' : 'bg-slate-400'
-                  }`}></span>
-                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                    currentSource === 'Firebase' ? 'bg-emerald-500' : currentSource === 'Cloudflare D1' ? 'bg-amber-500' : 'bg-slate-400'
-                  }`}></span>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="lg:hidden flex items-center gap-1.5">
-            <h1 className="text-sm sm:text-base font-bold text-slate-900 font-display uppercase tracking-wider">
-              Global <span className="text-indigo-600">Files</span>
-            </h1>
-            {/* Discrete DB Connection Status Voyant for mobile (Dot only) */}
-            <div 
-              className="flex items-center justify-center p-1 cursor-help"
-              title={`Source de données active : ${currentSource}`}
-            >
-              <span className="flex h-2 w-2 relative">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  currentSource === 'Firebase' ? 'bg-emerald-400' : currentSource === 'Cloudflare D1' ? 'bg-amber-400' : 'bg-slate-400'
-                }`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  currentSource === 'Firebase' ? 'bg-emerald-500' : currentSource === 'Cloudflare D1' ? 'bg-amber-500' : 'bg-slate-400'
-                }`}></span>
-              </span>
+              <h1 className="text-base sm:text-lg md:text-xl font-black text-slate-900 font-display uppercase tracking-tight sm:tracking-wider whitespace-nowrap">
+                Global <span className="text-indigo-600">Files</span>
+              </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Quick Command Palette Trigger Button */}
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200/80 dark:border-slate-700 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200/80 dark:border-slate-700 text-xs font-semibold transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0"
               title="Recherche intelligente (Ctrl+K)"
               id="cmd-k-trigger-btn"
             >
-              <Command className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="hidden md:inline font-bold">Recherche...</span>
-              <kbd className="hidden sm:inline px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[9px] font-mono text-slate-500">
+              <Command className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <span className="hidden sm:inline font-bold">Recherche...</span>
+              <kbd className="hidden md:inline px-1 py-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[9px] font-mono text-slate-500">
                 Ctrl+K
               </kbd>
             </button>
 
-            {/* Executive Brief Generator Button */}
-            {data.length > 0 && (
-              <button
-                onClick={() => setIsExecutiveBriefOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer"
-                title="Générer la synthèse exécutive"
-                id="executive-brief-trigger-btn"
-              >
-                <FileCheck className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Synthèse Exécutive</span>
-              </button>
-            )}
-
             {/* User credentials badge */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/50 rounded-xl">
-              <div className="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center uppercase">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/70 rounded-xl shrink-0">
+              <div className="w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[10px] flex items-center justify-center uppercase">
                 {user.email ? user.email[0] : 'U'}
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-black text-slate-800 leading-none truncate max-w-[120px]">{user.email}</p>
-                <p className="text-[8px] font-bold text-indigo-500 leading-none uppercase mt-0.5">{role || 'Rôle'}</p>
+                <p className="text-[11px] font-black text-slate-800 leading-none truncate max-w-[130px]">{user.email}</p>
+                <p className="text-[8.5px] font-bold text-indigo-500 leading-none uppercase mt-0.5">{role || 'Rôle'}</p>
               </div>
             </div>
 
-            <button onClick={() => setIsNotifOpen(true)} className="relative p-2 text-slate-500 hover:text-slate-800 transition-colors duration-200">
-              <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-              {globalAlerts.length > 0 && <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-rose-600 rounded-full"></span>}
+            {/* Notification Center Trigger */}
+            <button 
+              onClick={() => setIsNotifOpen(true)} 
+              className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200 shrink-0 cursor-pointer" 
+              title="Alertes & Notifications"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              {globalAlerts.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                </span>
+              )}
             </button>
 
+            {/* Mobile / Tablet Logout Button */}
             {isMobileOrTablet && (
               <button 
                 onClick={() => {
@@ -1046,14 +932,14 @@ const App: React.FC = () => {
                     setTimeout(() => setIsConfirmingHeaderLogout(false), 4000);
                   }
                 }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 border rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm transition-all duration-200 active:scale-95 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 border rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-2xs transition-all duration-200 active:scale-95 cursor-pointer shrink-0 ${
                   isConfirmingHeaderLogout 
                     ? "bg-rose-600 text-white border-rose-700 animate-pulse" 
                     : "bg-rose-50 border-rose-100 text-rose-600 hover:text-rose-700 hover:bg-rose-100/50"
                 }`}
                 title={isConfirmingHeaderLogout ? "Confirmer la déconnexion" : `Se déconnecter (${user.email})`}
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{isConfirmingHeaderLogout ? "Confirmer ?" : "Quitter"}</span>
               </button>
             )}
@@ -1095,6 +981,7 @@ const App: React.FC = () => {
                     {activeTab === 'tas' && <div className="overflow-auto h-full"><TASAnalysis data={data} onFilterChange={(c, v) => setFilters(prev => ({ ...prev, [c]: v }))} onSwitchToData={() => setActiveTab('data_pro')} /></div>}
                     {activeTab === 'battery' && <div className="overflow-auto h-full"><BatteryTracker data={data} thresholdMonths={batteryThreshold} /></div>}
                     {activeTab === 'belt' && <div className="overflow-auto h-full"><BeltTracker data={data} thresholdDays={beltThreshold} /></div>}
+                    {activeTab === 'gmao' && <div className="overflow-auto h-full p-4 sm:p-6"><GMAOStockTracker data={data} /></div>}
                     {activeTab === 'export' && <div className="overflow-auto h-full"><ExportManager allData={data} filteredData={filteredData} onImport={(data) => handleDataLoaded(data, false)} isAdmin={isAdmin} /></div>}
                     {activeTab === 'settings' && (
                       <div className="overflow-y-auto h-full custom-scrollbar">
@@ -1114,6 +1001,8 @@ const App: React.FC = () => {
                           setMaintenanceActive={setMaintenanceActive}
                           versionAnnounceActive={versionAnnounceActive}
                           setVersionAnnounceActive={setVersionAnnounceActive}
+                          autoNightMode={autoNightMode}
+                          setAutoNightMode={setAutoNightMode}
                         />
                       </div>
                     )}
@@ -1206,6 +1095,12 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      {/* COPILOT IA ASSISTANT */}
+      <CopilotIA 
+        data={data}
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+      />
     </div>
     </ErrorBoundary>
   );

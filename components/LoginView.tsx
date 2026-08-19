@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { loginWithEmail, registerUserWithoutLoggingIn } from "../firebase";
 import { Mail, Lock, Loader2, User } from "lucide-react";
+import { GFLogo } from "./GFLogo";
 
 export const LoginView: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -52,79 +53,8 @@ export const LoginView: React.FC = () => {
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500"></div>
 
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-slate-800/80 p-1">
-            <svg viewBox="0 0 500 500" className="w-full h-full">
-              <defs>
-                <radialGradient id="bg-grad-login" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#1e3a8a" />
-                  <stop offset="100%" stopColor="#0f172a" />
-                </radialGradient>
-
-                <linearGradient id="tech-blue-login" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#818cf8" />
-                </linearGradient>
-
-                <linearGradient id="glow-white-login" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="100%" stopColor="#cbd5e1" />
-                </linearGradient>
-
-                <filter id="glow-login" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-
-              {/* Dark Tech Background Badge */}
-              <circle cx="250" cy="250" r="220" fill="url(#bg-grad-login)" stroke="#38bdf8" strokeWidth="4" strokeOpacity="0.4" />
-              <circle cx="250" cy="250" r="212" fill="none" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.1" />
-
-              {/* Cloud Outline */}
-              <path d="M 160 280 A 45 45 0 0 1 180 195 A 65 65 0 0 1 305 175 A 50 50 0 0 1 350 250 A 40 40 0 0 1 330 320 L 170 320 A 40 40 0 0 1 160 280 Z" 
-                    fill="none" 
-                    stroke="url(#tech-blue-login)" 
-                    strokeWidth="3" 
-                    strokeDasharray="8 4"
-                    opacity="0.5" />
-
-              {/* Data Circuit Lines */}
-              <g stroke="url(#tech-blue-login)" strokeWidth="2" opacity="0.6" fill="none">
-                <path d="M 130 250 L 170 250 M 150 220 L 180 220 M 330 220 L 370 220 M 320 270 L 360 270" />
-                <path d="M 210 140 L 210 170 M 290 135 L 290 165" />
-              </g>
-
-              {/* Main 'GF' Monogram */}
-              <g filter="url(#glow-login)">
-                <path d="M 225 210 C 180 200, 150 230, 150 265 C 150 305, 185 325, 225 315 L 225 270 L 195 270" 
-                      fill="none" 
-                      stroke="url(#glow-white-login)" 
-                      strokeWidth="14" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" />
-
-                <path d="M 265 315 L 265 210 L 325 210 M 265 260 L 310 260" 
-                      fill="none" 
-                      stroke="url(#tech-blue-login)" 
-                      strokeWidth="14" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" />
-              </g>
-
-              {/* Data Nodes */}
-              <g fill="#38bdf8">
-                <circle cx="195" cy="270" r="5" />
-                <circle cx="325" cy="210" r="5" />
-                <circle cx="310" cy="260" r="5" />
-                <circle cx="130" cy="250" r="4" />
-                <circle cx="370" cy="220" r="4" />
-                <circle cx="210" cy="140" r="4" />
-              </g>
-              <g fill="#ffffff">
-                <circle cx="225" cy="210" r="5" />
-                <circle cx="265" cy="315" r="5" />
-              </g>
-            </svg>
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-2xl overflow-hidden p-0.5">
+            <GFLogo className="w-full h-full drop-shadow-xl" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             GlobalFiles <span className="text-indigo-400">Entreprise</span>

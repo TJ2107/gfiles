@@ -1,31 +1,90 @@
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
   <defs>
-    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0B3D91"/>
-      <stop offset="100%" stop-color="#1E6FEB"/>
+    <radialGradient id="gf-badge-surface" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#2c3038" />
+      <stop offset="50%" stop-color="#1a1c22" />
+      <stop offset="85%" stop-color="#121317" />
+      <stop offset="100%" stop-color="#0a0b0d" />
+    </radialGradient>
+
+    <linearGradient id="gf-blue-gradient" x1="20%" y1="15%" x2="80%" y2="85%">
+      <stop offset="0%" stop-color="#00a8f3" />
+      <stop offset="45%" stop-color="#008dd2" />
+      <stop offset="100%" stop-color="#006fa8" />
     </linearGradient>
+
+    <linearGradient id="gf-white-gradient" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="85%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <filter id="gf-blue-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.65" />
+    </filter>
+
+    <filter id="gf-f-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="-6" dy="14" stdDeviation="12" flood-color="#000000" flood-opacity="0.75" />
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
   </defs>
 
-  <!-- fond blanc avec coins arrondis (style app icon) -->
-  <rect width="200" height="200" rx="36" fill="#FFFFFF"/>
+  <!-- Main Squircle Container -->
+  <rect x="130" y="130" width="740" height="740" rx="155" ry="155" fill="url(#gf-badge-surface)" stroke="#ffffff" stroke-width="24" />
+  <rect x="146" y="146" width="708" height="708" rx="140" ry="140" fill="none" stroke="#475569" stroke-width="2.5" stroke-opacity="0.3" />
 
-  <g transform="translate(20,30)">
-    <!-- dossier stylisé -->
-    <path d="M0 40 L0 130 Q0 140 10 140 L150 140 Q160 140 160 130 L160 55 Q160 45 150 45 L85 45 L70 25 L10 25 Q0 25 0 35 Z"
-          fill="url(#blueGrad)"/>
-    <!-- languette du dossier -->
-    <rect x="0" y="35" width="70" height="12" rx="4" fill="#0B3D91"/>
+  <!-- Blue G Monogram Layer -->
+  <g filter="url(#gf-blue-shadow)">
+    <path
+      d="M 475 295
+         A 205 205 0 0 0 270 500
+         A 205 205 0 0 0 475 705
+         L 475 615
+         A 115 115 0 0 1 360 500
+         A 115 115 0 0 1 475 385
+         Z"
+      fill="url(#gf-blue-gradient)"
+    />
+    <path
+      d="M 525 315
+         L 525 450
+         L 560 450
+         L 560 375
+         L 600 325
+         Z"
+      fill="url(#gf-blue-gradient)"
+    />
+    <path
+      d="M 480 460
+         L 615 460
+         L 615 675
+         L 535 675
+         L 535 550
+         L 480 550
+         Z"
+      fill="url(#gf-blue-gradient)"
+    />
+  </g>
 
-    <!-- globe superposé -->
-    <circle cx="90" cy="90" r="58" fill="#FFFFFF" stroke="url(#blueGrad)" stroke-width="6"/>
-
-    <!-- méridiens -->
-    <ellipse cx="90" cy="90" rx="24" ry="58" fill="none" stroke="url(#blueGrad)" stroke-width="3"/>
-    <ellipse cx="90" cy="90" rx="58" ry="24" fill="none" stroke="url(#blueGrad)" stroke-width="3"/>
-    <line x1="32" y1="90" x2="148" y2="90" stroke="url(#blueGrad)" stroke-width="3"/>
-    <line x1="90" y1="32" x2="90" y2="148" stroke="url(#blueGrad)" stroke-width="3"/>
-
-    <!-- point central -->
-    <circle cx="90" cy="90" r="6" fill="url(#blueGrad)"/>
+  <!-- White F Monogram Overlay -->
+  <g filter="url(#gf-f-shadow)">
+    <path
+      d="M 470 240
+         L 730 240
+         L 730 330
+         L 560 330
+         L 560 460
+         L 705 460
+         L 705 545
+         L 560 545
+         L 560 760
+         L 470 760
+         L 470 550
+         L 490 550
+         L 490 460
+         L 470 460
+         Z"
+      fill="url(#gf-white-gradient)"
+    />
   </g>
 </svg>

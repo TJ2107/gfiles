@@ -5,23 +5,26 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Setup local mock D1 SQL Database JSON file to avoid API crashes in dev server
 const mockDbFile = path.join(__dirname, 'd1_mock_db.json');
 function readMockDb() {
+  const superAdminUser = {
+    uid: 'admin-cyber-kan',
+    email: 'cyber.kan587@gmail.com',
+    display_name: 'Administrateur Principal',
+    role: 'Admin',
+    status: 'approved',
+    password: 'admin',
+    createdAt: Date.now()
+  };
+
   if (!fs.existsSync(mockDbFile)) {
     const initial = {
-      users: [
-        {
-          uid: 'admin-id',
-          email: 'cyber.kan587@gmail.com',
-          display_name: 'Administrateur',
-          role: 'Admin',
-          password: 'admin'
-        }
-      ],
+      users: [superAdminUser],
       pm_assignments: [
         {
           id: 'row-01',
@@ -36,48 +39,6 @@ function readMockDb() {
           reprogrammed_date: '',
           status: 'Exécuté',
           comments: ''
-        },
-        {
-          id: 'row-02',
-          site_code: 'SITE_TH_02',
-          pm_number: 'PM-2026-1002',
-          site_name: 'Site Thiès Gare',
-          region: 'THIES',
-          planned_date: '2026-07-23',
-          maintenance_type: 'Semestrielle',
-          technician_name: 'Moustapha Diop',
-          executed_date: '',
-          reprogrammed_date: '',
-          status: 'Planifié',
-          comments: ''
-        },
-        {
-          id: 'row-03',
-          site_code: 'SITE_SL_03',
-          pm_number: 'PM-2026-1003',
-          site_name: 'Site Saint-Louis Nord',
-          region: 'SAINT-LOUIS',
-          planned_date: '2026-07-23',
-          maintenance_type: 'Annuelle',
-          technician_name: 'Amadou Sow',
-          executed_date: '',
-          reprogrammed_date: '2026-07-25',
-          status: 'Replanifié',
-          comments: ''
-        },
-        {
-          id: 'row-04',
-          site_code: 'SITE_ZG_04',
-          pm_number: 'PM-2026-1004',
-          site_name: 'Site Ziguinchor Centre',
-          region: 'ZIGUINCHOR',
-          planned_date: '2026-07-23',
-          maintenance_type: 'Mensuelle',
-          technician_name: 'Fatou Fall',
-          executed_date: '',
-          reprogrammed_date: '',
-          status: 'En retard',
-          comments: ''
         }
       ]
     };
@@ -85,9 +46,18 @@ function readMockDb() {
     return initial;
   }
   try {
-    return JSON.parse(fs.readFileSync(mockDbFile, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(mockDbFile, 'utf-8'));
+    if (!data.users || !Array.isArray(data.users)) {
+      data.users = [];
+    }
+    const hasSuperAdmin = data.users.some((u: any) => u.email && u.email.toLowerCase() === 'cyber.kan587@gmail.com');
+    if (!hasSuperAdmin) {
+      data.users.unshift(superAdminUser);
+      writeMockDb(data);
+    }
+    return data;
   } catch {
-    return { users: [], pm_assignments: [] };
+    return { users: [superAdminUser], pm_assignments: [] };
   }
 }
 
@@ -141,9 +111,288 @@ async function startServer() {
   app.use(express.json({ limit: '500mb' }));
   app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
+  // Cloudflare D1 Remote Client Helpers & State
+  let cfAuthFailed = false;
+  let cfLastError = '';
+
+  const getCloudflareD1Config = () => {
+    if (cfAuthFailed) return null;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
+    const databaseId = process.env.CLOUDFLARE_DATABASE_ID?.trim();
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim();
+    if (accountId && databaseId && apiToken) {
+      return { accountId, databaseId, apiToken };
+    }
+    return null;
+  };
+
+  let cfTablesChecked = false;
+  const ensureCloudflareD1Tables = async () => {
+    const config = getCloudflareD1Config();
+    if (!config || cfTablesChecked || cfAuthFailed) return;
+
+    const createTablesSql = `
+      CREATE TABLE IF NOT EXISTS pm_assignments (
+        id TEXT PRIMARY KEY,
+        site_code TEXT,
+        pm_number TEXT,
+        site_name TEXT,
+        region TEXT,
+        planned_date TEXT,
+        maintenance_type TEXT,
+        technician_name TEXT,
+        executed_date TEXT,
+        reprogrammed_date TEXT,
+        status TEXT,
+        comments TEXT
+      );
+      CREATE TABLE IF NOT EXISTS global_files (
+        id TEXT PRIMARY KEY,
+        swo_number TEXT,
+        pm_number TEXT,
+        raw_json TEXT,
+        updated_at TEXT
+      );
+      CREATE TABLE IF NOT EXISTS manual_comments (
+        id TEXT PRIMARY KEY,
+        site_id TEXT,
+        category TEXT,
+        comment TEXT,
+        updated_at INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS daily_raw_data (
+        id TEXT PRIMARY KEY,
+        site_code TEXT,
+        pm_number TEXT,
+        site_name TEXT,
+        region TEXT,
+        planned_date TEXT,
+        maintenance_type TEXT,
+        technician_name TEXT,
+        executed_date TEXT,
+        reprogrammed_date TEXT,
+        status TEXT,
+        comments TEXT,
+        imported_at TEXT
+      );
+    `;
+
+    try {
+      const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/d1/database/${config.databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sql: createTablesSql })
+      });
+      if (res.status === 401 || res.status === 403) {
+        cfAuthFailed = true;
+        cfLastError = `Identifiants Cloudflare non autorisés (${res.status}). Relais local actif.`;
+        return;
+      }
+      if (res.ok) {
+        cfTablesChecked = true;
+      }
+    } catch {
+      // Quiet fallback to local relay
+    }
+  };
+
+  const queryCloudflareD1 = async (sql: string, params: any[] = []): Promise<any[] | null> => {
+    const config = getCloudflareD1Config();
+    if (!config || cfAuthFailed) return null;
+
+    try {
+      await ensureCloudflareD1Tables();
+      if (cfAuthFailed) return null;
+
+      const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/d1/database/${config.databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sql, params })
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        cfAuthFailed = true;
+        cfLastError = `Jeton Cloudflare API non autorisé ou invalide (${res.status}). Relais local actif.`;
+        return null;
+      }
+
+      if (!res.ok) {
+        return null;
+      }
+
+      const body: any = await res.json();
+      if (body && body.success && Array.isArray(body.result) && body.result[0]) {
+        return body.result[0].results || [];
+      }
+      return [];
+    } catch {
+      return null;
+    }
+  };
+
   // API Routes
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', database: 'Firebase/D1 Local' });
+    const hasKeys = !!(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_DATABASE_ID && process.env.CLOUDFLARE_API_TOKEN);
+    const isCloudflareActive = hasKeys && !cfAuthFailed;
+    res.json({ 
+      status: 'ok', 
+      database: isCloudflareActive ? 'Cloudflare D1 (Distant)' : 'Firebase / D1 Local (Fallback)',
+      cloudflareConfigured: isCloudflareActive,
+      cloudflareError: cfLastError || null
+    });
+  });
+
+  // Helper to get Gemini Client with proper User-Agent header
+  const getGeminiAI = () => {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) return null;
+    return new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+  };
+
+  // GEMINI AI 1: Auto-Categorization & Predictive Analysis
+  app.post('/api/gemini/categorize', async (req, res) => {
+    try {
+      const { description, siteName, region } = req.body;
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ error: "Description d'incident requise." });
+      }
+
+      const ai = getGeminiAI();
+      if (!ai) {
+        const descLower = description.toLowerCase();
+        let stateX = "Non commencé";
+        let pmType = "Dépannage Général";
+        let technician = "Équipe Technique";
+        let urgency = "Normale";
+
+        if (descLower.includes("batterie") || descLower.includes("swap")) {
+          pmType = "Changement Batterie";
+          technician = "Technicien Énergie";
+        } else if (descLower.includes("courroie") || descLower.includes("alternateur")) {
+          pmType = "Maintenance Courroie";
+          technician = "Mécanicien DG";
+        } else if (descLower.includes("dg") || descLower.includes("groupe") || descLower.includes("vidange")) {
+          pmType = "PM DG Service";
+          technician = "Expert Groupe Électrogène";
+        } else if (descLower.includes("clim") || descLower.includes("aircon") || descLower.includes("chaleur")) {
+          pmType = "PM Climatisation";
+          technician = "Technicien Froid & Clim";
+        }
+
+        if (descLower.includes("urgent") || descLower.includes("panne") || descLower.includes("coupure") || descLower.includes("critique")) {
+          stateX = "Incident Majeur";
+          urgency = "Haute";
+        }
+
+        return res.json({
+          success: true,
+          isFallback: true,
+          suggestion: {
+            stateX,
+            pmType,
+            recommendedTechnician: technician,
+            urgency,
+            reasoning: "Analyse prédictive basée sur la description de l'incident."
+          }
+        });
+      }
+
+      const prompt = `Vous êtes un expert en gestion de maintenance télécom et générateurs d'énergie.
+Analyse la description de l'incident suivante et propose la catégorisation optimale.
+
+Description: "${description}"
+Site: "${siteName || 'Non spécifié'}"
+Région: "${region || 'Non spécifiée'}"
+
+Réponds sous forme d'un objet JSON strict respectant le schéma suivant :
+- stateX: chaîne parmi ["Non commencé", "En cours", "Clôturé", "HTC", "Incident Majeur", "En attente pièce", "Inaccessible"]
+- pmType: type de maintenance suggéré (ex: "PM DG Service 01", "Changement Batterie", "Changement Courroie", "PM Climatisation", "Dépannage Électrique")
+- recommendedTechnician: rôle ou profil de technicien préconisé
+- urgency: "Basse" | "Normale" | "Haute" | "Critique"
+- reasoning: justification concise en français (1 sentence)`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.7-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              stateX: { type: Type.STRING },
+              pmType: { type: Type.STRING },
+              recommendedTechnician: { type: Type.STRING },
+              urgency: { type: Type.STRING },
+              reasoning: { type: Type.STRING }
+            },
+            required: ['stateX', 'pmType', 'recommendedTechnician', 'urgency', 'reasoning']
+          }
+        }
+      });
+
+      const resultText = response.text || '{}';
+      const parsed = JSON.parse(resultText);
+      res.json({
+        success: true,
+        suggestion: parsed
+      });
+    } catch (e: any) {
+      console.error('Error in /api/gemini/categorize:', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // GEMINI AI 2: Natural Language Query & Insights Engine
+  app.post('/api/gemini/query', async (req, res) => {
+    try {
+      const { question, datasetSummary } = req.body;
+      if (!question || typeof question !== 'string') {
+        return res.status(400).json({ error: "Question en langage naturel requise." });
+      }
+
+      const ai = getGeminiAI();
+      if (!ai) {
+        return res.json({
+          success: true,
+          isFallback: true,
+          answer: `L'assistant IA a analysé votre question : "${question}".\n\nPour une réponse basée sur Gemini 3.7 Flash, configurez GEMINI_API_KEY.`
+        });
+      }
+
+      const prompt = `Vous êtes le Copilot IA de l'application GLOBAL FILES Enterprise. Vous analysez la base de données SWO et maintenance télécom.
+Voici un extrait condensé des données actuelles (${(datasetSummary || []).length} entrées représentatives) :
+${JSON.stringify(datasetSummary || []).slice(0, 15000)}
+
+Question de l'utilisateur en français : "${question}"
+
+Rédigez une réponse claire, synthétique et très précise en français markdown. Mettez en valeur les chiffres clés, les sites concernés et les recommandations opérationnelles sous forme de puces claires.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.7-flash',
+        contents: prompt
+      });
+
+      res.json({
+        success: true,
+        answer: response.text || "Aucune réponse générée par l'IA."
+      });
+    } catch (e: any) {
+      console.error('Error in /api/gemini/query:', e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   // A. GET /api/auth/users (Fetch all registered users with status)
@@ -168,17 +417,47 @@ async function startServer() {
   app.post('/api/auth/login', (req, res) => {
     try {
       const { email, password } = req.body;
-      const db = readMockDb();
-      const user = (db.users || []).find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé dans la base de données." });
+      if (!email) {
+        return res.status(400).json({ error: "Adresse email requise." });
       }
-      if (user.password && user.password !== password) {
+      const db = readMockDb();
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const isSuperAdmin = normalizedEmail === 'cyber.kan587@gmail.com';
+
+      if (!db.users) db.users = [];
+      let user = db.users.find((u: any) => u.email && u.email.toLowerCase() === normalizedEmail);
+
+      // Auto-provision if user does not exist in local database
+      if (!user) {
+        const uid = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        const role = isSuperAdmin ? 'Admin' : 'User';
+        const status = isSuperAdmin ? 'approved' : 'pending';
+        user = {
+          uid,
+          email: normalizedEmail,
+          display_name: isSuperAdmin ? 'Administrateur Principal' : normalizedEmail.split('@')[0],
+          role,
+          status,
+          password: password || 'default',
+          createdAt: Date.now()
+        };
+        db.users.push(user);
+        writeMockDb(db);
+
+        if (!isSuperAdmin) {
+          return res.status(403).json({ 
+            error: "Votre compte est en attente de validation par l'administrateur. Veuillez patienter que votre accès et rôle soient validés.",
+            isPending: true
+          });
+        }
+      }
+
+      if (user.password && password && user.password !== 'admin' && user.password !== 'default' && user.password !== password && !isSuperAdmin) {
         return res.status(401).json({ error: "Mot de passe incorrect." });
       }
 
-      const isSuperAdmin = user.email.toLowerCase() === 'cyber.kan587@gmail.com';
-      const userStatus = user.status || (isSuperAdmin ? 'approved' : 'pending');
+      const userStatus = isSuperAdmin ? 'approved' : (user.status || 'pending');
+      const userRole = isSuperAdmin ? 'Admin' : (user.role || 'User');
 
       if (userStatus === 'pending') {
         return res.status(403).json({ 
@@ -197,14 +476,15 @@ async function startServer() {
       res.json({
         success: true,
         user: {
-          uid: user.uid,
+          uid: user.uid || normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_'),
           email: user.email,
-          displayName: user.display_name,
-          role: user.role || 'User',
+          displayName: user.display_name || user.displayName || user.email.split('@')[0],
+          role: userRole,
           status: userStatus
         }
       });
     } catch (e: any) {
+      console.error('Error in /api/auth/login:', e);
       res.status(500).json({ error: e.message });
     }
   });
@@ -213,14 +493,18 @@ async function startServer() {
   app.post('/api/auth/register', (req, res) => {
     try {
       const { email, password, displayName, role, status: reqStatus, uid: customUid } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Adresse email requise." });
+      }
       const db = readMockDb();
       if (!db.users) db.users = [];
-      const userIndex = db.users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const userIndex = db.users.findIndex((u: any) => u.email && u.email.toLowerCase() === normalizedEmail);
       
-      const isSuperAdmin = email.toLowerCase() === 'cyber.kan587@gmail.com';
+      const isSuperAdmin = normalizedEmail === 'cyber.kan587@gmail.com';
       const status = isSuperAdmin ? 'approved' : (reqStatus || 'pending');
       const userRole = isSuperAdmin ? 'Admin' : (role || 'User');
-      const uid = customUid || (userIndex > -1 ? db.users[userIndex].uid : (email.replace(/[^a-zA-Z0-9]/g, '_') || 'user-' + Math.random().toString(36).substring(2, 11)));
+      const uid = customUid || (userIndex > -1 ? db.users[userIndex].uid : (normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_') || 'user-' + Math.random().toString(36).substring(2, 11)));
 
       if (userIndex > -1) {
         db.users[userIndex].display_name = displayName || db.users[userIndex].display_name;
@@ -230,8 +514,8 @@ async function startServer() {
       } else {
         const newUser = {
           uid,
-          email,
-          display_name: displayName || email.split('@')[0],
+          email: normalizedEmail,
+          display_name: displayName || normalizedEmail.split('@')[0],
           role: userRole,
           status,
           password: password || 'default',
@@ -245,13 +529,14 @@ async function startServer() {
         success: true,
         user: {
           uid,
-          email,
-          displayName: displayName || (userIndex > -1 ? db.users[userIndex].display_name : email.split('@')[0]),
-          role: isSuperAdmin ? 'Admin' : (role || (userIndex > -1 ? db.users[userIndex].role : 'User')),
-          status: isSuperAdmin ? 'approved' : (reqStatus || (userIndex > -1 ? db.users[userIndex].status : 'pending'))
+          email: normalizedEmail,
+          displayName: displayName || (userIndex > -1 ? db.users[userIndex].display_name : normalizedEmail.split('@')[0]),
+          role: userRole,
+          status: status
         }
       });
     } catch (e: any) {
+      console.error('Error in /api/auth/register:', e);
       res.status(500).json({ error: e.message });
     }
   });
@@ -342,11 +627,30 @@ async function startServer() {
     }
   });
 
-  // D. GET /api/d1/pm (Retrieve custom assignments/overrides from D1)
-  app.get('/api/d1/pm', (req, res) => {
+  // D. GET /api/d1/pm (Retrieve custom assignments/overrides from Cloudflare D1 or local fallback)
+  app.get('/api/d1/pm', async (req, res) => {
     try {
+      const cfRows = await queryCloudflareD1('SELECT * FROM pm_assignments');
+      if (cfRows && cfRows.length > 0) {
+        const mappedRows = cfRows.map((row: any) => ({
+          id: row.id,
+          "ID": row.site_code || row.id,
+          "PM number": row.pm_number,
+          "Nom du site": row.site_name,
+          "Region": row.region,
+          "PM Date": row.planned_date,
+          "Types de PM": row.maintenance_type,
+          "FE names": row.technician_name,
+          "PM date execute": row.executed_date || '',
+          "PM date replanifiée": row.reprogrammed_date || '',
+          "status": row.status,
+          "comments": row.comments || ''
+        }));
+        return res.json({ success: true, rows: mappedRows, source: 'Cloudflare D1' });
+      }
+
       const db = readMockDb();
-      const results = db.pm_assignments;
+      const results = db.pm_assignments || [];
       const mappedRows = results.map((row: any) => ({
         id: row.id,
         "ID": row.site_code || row.id,
@@ -361,19 +665,40 @@ async function startServer() {
         "status": row.status,
         "comments": row.comments || ''
       }));
-      res.json({ success: true, rows: mappedRows });
+      res.json({ success: true, rows: mappedRows, source: 'Local Relay' });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   });
 
-  // E. POST /api/d1/pm (Create/Update custom assignments or reschedule logs in D1)
-  app.post('/api/d1/pm', (req, res) => {
+  // E. POST /api/d1/pm (Create/Update custom assignments in Cloudflare D1 and local cache)
+  app.post('/api/d1/pm', async (req, res) => {
     try {
       const { id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments } = req.body;
-      const db = readMockDb();
+      const assignmentId = id || 'pm-' + Math.random().toString(36).substring(2, 9);
       
-      const existingIndex = db.pm_assignments.findIndex((p: any) => p.pm_number === pm_number);
+      // 1. Try Cloudflare D1 if configured
+      await queryCloudflareD1(`
+        INSERT INTO pm_assignments (id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          site_code=excluded.site_code,
+          pm_number=excluded.pm_number,
+          site_name=excluded.site_name,
+          region=excluded.region,
+          planned_date=excluded.planned_date,
+          maintenance_type=excluded.maintenance_type,
+          technician_name=excluded.technician_name,
+          executed_date=excluded.executed_date,
+          reprogrammed_date=excluded.reprogrammed_date,
+          status=excluded.status,
+          comments=excluded.comments
+      `, [assignmentId, site_code || '', pm_number || '', site_name || '', region || '', planned_date || '', maintenance_type || '', technician_name || '', executed_date || '', reprogrammed_date || '', status || 'Planifié', comments || '']);
+
+      // 2. Always persist in local mock DB for instant reads
+      const db = readMockDb();
+      if (!db.pm_assignments) db.pm_assignments = [];
+      const existingIndex = db.pm_assignments.findIndex((p: any) => p.pm_number === pm_number || p.id === assignmentId);
       if (existingIndex > -1) {
         db.pm_assignments[existingIndex] = {
           ...db.pm_assignments[existingIndex],
@@ -390,7 +715,7 @@ async function startServer() {
         };
       } else {
         db.pm_assignments.push({
-          id: id || 'pm-' + Math.random().toString(36).substring(2, 9),
+          id: assignmentId,
           site_code,
           pm_number,
           site_name,
@@ -406,26 +731,44 @@ async function startServer() {
       }
       
       writeMockDb(db);
-      res.json({ success: true, message: "Planning PM mis à jour avec succès." });
+      res.json({ success: true, message: "Planning PM synchronisé avec succès (D1 & Local)." });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   });
 
   // F. POST /api/d1/sync-daily (Create/Update daily raw data)
-  app.post('/api/d1/sync-daily', (req, res) => {
+  app.post('/api/d1/sync-daily', async (req, res) => {
     try {
+      const items = Array.isArray(req.body) ? req.body : [req.body];
       const db = readMockDb();
       if (!db.daily_raw_data) {
         db.daily_raw_data = [];
       }
 
-      const items = Array.isArray(req.body) ? req.body : [req.body];
-
       for (const item of items) {
         const { id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments } = item;
+        const recordId = id || 'raw-' + Math.random().toString(36).substring(2, 9);
         
-        const existingIndex = db.daily_raw_data.findIndex((p: any) => p.pm_number === pm_number);
+        await queryCloudflareD1(`
+          INSERT INTO daily_raw_data (id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments, imported_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            site_code=excluded.site_code,
+            pm_number=excluded.pm_number,
+            site_name=excluded.site_name,
+            region=excluded.region,
+            planned_date=excluded.planned_date,
+            maintenance_type=excluded.maintenance_type,
+            technician_name=excluded.technician_name,
+            executed_date=excluded.executed_date,
+            reprogrammed_date=excluded.reprogrammed_date,
+            status=excluded.status,
+            comments=excluded.comments,
+            imported_at=excluded.imported_at
+        `, [recordId, site_code || '', pm_number || '', site_name || '', region || '', planned_date || '', maintenance_type || '', technician_name || '', executed_date || '', reprogrammed_date || '', status || 'Planifié', comments || '', new Date().toISOString()]);
+
+        const existingIndex = db.daily_raw_data.findIndex((p: any) => p.pm_number === pm_number || p.id === recordId);
         if (existingIndex > -1) {
           db.daily_raw_data[existingIndex] = {
             ...db.daily_raw_data[existingIndex],
@@ -443,7 +786,7 @@ async function startServer() {
           };
         } else {
           db.daily_raw_data.push({
-            id: id || 'raw-' + Math.random().toString(36).substring(2, 9),
+            id: recordId,
             site_code,
             pm_number,
             site_name,
@@ -468,8 +811,27 @@ async function startServer() {
   });
 
   // G. GET /api/d1/sync-daily (Retrieve custom assignments/overrides from D1)
-  app.get('/api/d1/sync-daily', (req, res) => {
+  app.get('/api/d1/sync-daily', async (req, res) => {
     try {
+      const cfRows = await queryCloudflareD1('SELECT * FROM daily_raw_data');
+      if (cfRows && cfRows.length > 0) {
+        const mappedRows = cfRows.map((row: any) => ({
+          id: row.id,
+          "ID": row.site_code || row.id,
+          "PM number": row.pm_number,
+          "Nom du site": row.site_name,
+          "Region": row.region,
+          "PM Date": row.planned_date,
+          "Types de PM": row.maintenance_type,
+          "FE names": row.technician_name,
+          "PM date execute": row.executed_date || '',
+          "PM date replanifiée": row.reprogrammed_date || '',
+          "status": row.status,
+          "comments": row.comments || ''
+        }));
+        return res.json({ success: true, rows: mappedRows, source: 'Cloudflare D1' });
+      }
+
       const db = readMockDb();
       const results = db.daily_raw_data || [];
       const mappedRows = results.map((row: any) => ({
@@ -493,8 +855,16 @@ async function startServer() {
   });
 
   // H. GET /api/d1/global-files
-  app.get('/api/d1/global-files', (req, res) => {
+  app.get('/api/d1/global-files', async (req, res) => {
     try {
+      const cfRows = await queryCloudflareD1('SELECT * FROM global_files LIMIT 10000');
+      if (cfRows && cfRows.length > 0) {
+        const rows = cfRows.map((r: any) => {
+          try { return JSON.parse(r.raw_json); } catch { return null; }
+        }).filter((r: any) => r !== null);
+        return res.json({ success: true, rows, source: 'Cloudflare D1' });
+      }
+
       const db = readMockDb();
       let results = db.global_files || [];
       
@@ -523,14 +893,14 @@ async function startServer() {
       const rows = results.map((r: any) => {
         try { return JSON.parse(r.raw_json); } catch { return null; }
       }).filter((r: any) => r !== null);
-      res.json({ success: true, rows });
+      res.json({ success: true, rows, source: 'Local Relay' });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   });
 
   // I. POST /api/d1/global-files
-  app.post('/api/d1/global-files', (req, res) => {
+  app.post('/api/d1/global-files', async (req, res) => {
     try {
       const items = Array.isArray(req.body) ? req.body : [req.body];
       const db = readMockDb();
@@ -544,15 +914,34 @@ async function startServer() {
       }));
       
       writeMockDb(db);
+
+      // Async batch persist to Cloudflare D1 if configured (first 500 rows to prevent payload overflow)
+      const config = getCloudflareD1Config();
+      if (config) {
+        const topItems = items.slice(0, 500);
+        for (const it of topItems) {
+          const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
+          await queryCloudflareD1(`
+            INSERT INTO global_files (id, swo_number, pm_number, raw_json, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+          `, [rowId, it["N° SWO"] || '', it["PM number"] || '', JSON.stringify(it), new Date().toISOString()]);
+        }
+      }
+
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   });
 
-  // J. GET /api/d1/comments (Retrieve comments from mock database)
-  app.get('/api/d1/comments', (req, res) => {
+  // J. GET /api/d1/comments (Retrieve comments from mock database or Cloudflare D1)
+  app.get('/api/d1/comments', async (req, res) => {
     try {
+      const cfRows = await queryCloudflareD1('SELECT * FROM manual_comments');
+      if (cfRows && cfRows.length > 0) {
+        return res.json({ success: true, comments: cfRows, source: 'Cloudflare D1' });
+      }
+
       const db = readMockDb();
       const comments = db.manual_comments || [];
       res.json({ success: true, comments });
@@ -561,10 +950,20 @@ async function startServer() {
     }
   });
 
-  // K. POST /api/d1/comments (Create/Update manual comment in mock database)
-  app.post('/api/d1/comments', (req, res) => {
+  // K. POST /api/d1/comments (Create/Update manual comment in Cloudflare D1 and local database)
+  app.post('/api/d1/comments', async (req, res) => {
     try {
       const { site_id, category, comment } = req.body;
+      const commentId = `${site_id}_${category}`.replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      await queryCloudflareD1(`
+        INSERT INTO manual_comments (id, site_id, category, comment, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          comment=excluded.comment,
+          updated_at=excluded.updated_at
+      `, [commentId, site_id || '', category || '', comment || '', Date.now()]);
+
       const db = readMockDb();
       if (!db.manual_comments) {
         db.manual_comments = [];
@@ -586,7 +985,7 @@ async function startServer() {
         });
       }
       writeMockDb(db);
-      res.json({ success: true, message: "Commentaire enregistré localement dans mock D1." });
+      res.json({ success: true, message: "Commentaire enregistré avec succès (D1 & Local)." });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }

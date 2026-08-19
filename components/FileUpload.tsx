@@ -26,11 +26,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, existingDa
         if (!data) throw new Error("No data found");
         
         const workbook = XLSX.read(new Uint8Array(data as ArrayBuffer), { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
         
-        const rawData = XLSX.utils.sheet_to_json(sheet) as GlobalFileRow[];
-        const sanitizedData = rawData.map(row => normalizeRow(row));
+        const combinedData: GlobalFileRow[] = [];
+        workbook.SheetNames.forEach(name => {
+          const sheet = workbook.Sheets[name];
+          if (!sheet) return;
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }) as GlobalFileRow[];
+          if (Array.isArray(rows) && rows.length > 0) {
+            const normalized = rows.map(row => normalizeRow(row));
+            combinedData.push(...normalized);
+          }
+        });
+
+        if (combinedData.length === 0) {
+          alert("Le fichier Excel ne contient aucune ligne de données exploitable.");
+          return;
+        }
+
+        const sanitizedData = combinedData;
         
         if (existingDataCount > 0) {
           setPendingData(sanitizedData);

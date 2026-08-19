@@ -173,17 +173,17 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
   }, [data, period]);
 
   const KPICard = ({ title, value, icon: Icon, colorClass, subtitle, borderAccent }: { title: string; value: string | number; icon: React.ElementType; colorClass: string; subtitle?: string; borderAccent?: string }) => (
-    <div className={`relative bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col justify-between`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{title}</span>
-        <div className={`p-2 rounded-xl bg-slate-50 text-slate-600 group-hover:scale-110 transition-transform ${colorClass}`}>
-          <Icon className="w-5 h-5" />
+    <div className={`relative bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden group hover:shadow-md transition-all duration-300 flex flex-col justify-between`}>
+      <div className="flex items-center justify-between mb-1.5 gap-1">
+        <span className="text-[9.5px] sm:text-[10.5px] font-black text-slate-500 uppercase tracking-wider truncate">{title}</span>
+        <div className={`p-1.5 sm:p-2 rounded-xl bg-slate-50 text-slate-600 group-hover:scale-105 transition-transform shrink-0 ${colorClass}`}>
+          <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
         </div>
       </div>
       <div>
-        <div className="flex items-baseline gap-2">
-          <h4 className={`text-3xl sm:text-4xl font-black tracking-tight ${colorClass}`}>{value}</h4>
-          {subtitle && <span className="text-xs font-semibold text-slate-400">{subtitle}</span>}
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <h4 className={`text-xl sm:text-2xl md:text-3xl font-black tracking-tight ${colorClass}`}>{value}</h4>
+          {subtitle && <span className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">{subtitle}</span>}
         </div>
       </div>
       <div className={`absolute bottom-0 left-0 right-0 h-1 ${borderAccent || 'bg-slate-200'}`}></div>
@@ -459,51 +459,51 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
   ];
 
   return (
-    <div className={`p-4 sm:p-8 space-y-6 bg-white min-h-full ${isFullscreen ? 'fixed inset-0 z-[999] overflow-y-auto bg-slate-900 text-white p-6 sm:p-12' : ''}`}>
+    <div className={`p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-white min-h-full ${isFullscreen ? 'fixed inset-0 z-[999] overflow-y-auto bg-slate-900 text-white p-4 sm:p-8 lg:p-12' : ''}`}>
       
       {/* PPT Presentation Control Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-200/90 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-md">
-            <Presentation className="w-6 h-6" />
+      <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-xs border-2 border-slate-200/90 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 sm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="p-2.5 sm:p-3 bg-indigo-600 text-white rounded-xl shadow-md shrink-0">
+            <Presentation className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 font-black text-[10px] uppercase tracking-wider rounded-md border border-indigo-200">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider rounded-md border border-indigo-200">
                 Rapport Présentation PPT
               </span>
-              <span className="text-xs text-slate-500 font-extrabold uppercase">Feuille GM Performance</span>
+              <span className="text-[10px] sm:text-xs text-slate-500 font-extrabold uppercase">Feuille GM Performance</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight uppercase mt-0.5">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase mt-0.5">
               Revue de Performance Opérationnelle
             </h2>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
           {/* Period Selector */}
-          <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-xl border-2 border-slate-200 text-xs shadow-2xs">
-            <Calendar className="w-4 h-4 text-indigo-600" />
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-slate-200 text-xs shadow-2xs w-full sm:w-auto justify-between sm:justify-start">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0" />
             <input 
               type="date" 
-              className="border-none bg-transparent font-black outline-none cursor-pointer text-slate-900" 
+              className="border-none bg-transparent font-black outline-none cursor-pointer text-slate-900 text-xs" 
               value={period.start} 
               onChange={(e) => setPeriod(prev => ({ ...prev, start: e.target.value }))} 
             />
-            <span className="text-slate-400 font-black">à</span>
+            <span className="text-slate-400 font-black text-xs">à</span>
             <input 
               type="date" 
-              className="border-none bg-transparent font-black text-indigo-700 outline-none cursor-pointer" 
+              className="border-none bg-transparent font-black text-indigo-700 outline-none cursor-pointer text-xs" 
               value={period.end} 
               onChange={(e) => setPeriod(prev => ({ ...prev, end: e.target.value }))} 
             />
           </div>
 
           {/* View Mode Switches */}
-          <div className="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs">
+          <div className="flex items-center bg-slate-100 p-1 sm:p-1.5 rounded-xl border border-slate-200 text-xs shrink-0">
             <button
               onClick={() => setViewMode('slides')}
-              className={`px-3.5 py-1.5 rounded-lg font-black transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg font-black transition-all flex items-center gap-1.5 text-xs ${
                 viewMode === 'slides' 
                   ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/80' 
                   : 'text-slate-600 hover:text-slate-900'
@@ -514,7 +514,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             </button>
             <button
               onClick={() => setViewMode('full')}
-              className={`px-3.5 py-1.5 rounded-lg font-black transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg font-black transition-all flex items-center gap-1.5 text-xs ${
                 viewMode === 'full' 
                   ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/80' 
                   : 'text-slate-600 hover:text-slate-900'
@@ -528,7 +528,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition-all border border-slate-200"
+            className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition-all border border-slate-200 shrink-0 cursor-pointer"
             title={isFullscreen ? "Quitter le plein écran" : "Mode Plein Écran Présentation"}
           >
             <Maximize2 className="w-4 h-4" />
@@ -538,15 +538,15 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
 
       {/* Slide Navigator Controls (Only active in 'slides' mode) */}
       {viewMode === 'slides' && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white px-5 py-3.5 rounded-xl border-2 border-slate-200/90 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase text-slate-500 tracking-wider">Navigation Slides :</span>
-            <div className="flex gap-1.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 bg-white p-3 sm:px-5 sm:py-3.5 rounded-xl border-2 border-slate-200/90 shadow-2xs">
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+            <span className="text-[11px] sm:text-xs font-black uppercase text-slate-500 tracking-wider">Slides :</span>
+            <div className="flex gap-1 sm:gap-1.5">
               {[1, 2, 3, 4, 5].map((num) => (
                 <button
                   key={num}
                   onClick={() => setCurrentSlide(num)}
-                  className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all ${
+                  className={`px-2.5 sm:px-3.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     currentSlide === num 
                       ? 'bg-indigo-600 text-white shadow-sm' 
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'
@@ -558,15 +558,15 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             </div>
           </div>
 
-          <div className="text-xs font-black text-slate-900 uppercase tracking-tight">
+          <div className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight text-center sm:text-left">
             {slideTitles.find(s => s.id === currentSlide)?.name}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               disabled={currentSlide === 1}
               onClick={() => setCurrentSlide(prev => Math.max(1, prev - 1))}
-              className="p-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -576,7 +576,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             <button
               disabled={currentSlide === 5}
               onClick={() => setCurrentSlide(prev => Math.min(5, prev + 1))}
-              className="p-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -586,9 +586,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
 
       {/* MAIN CONTENT AREA */}
       {(viewMode === 'full' || currentSlide === 1) && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-slate-200 shadow-sm space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* PPT Slide Banner */}
-          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-100 pb-4 gap-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -596,78 +596,80 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </span>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Synthèse Exécutive</span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                 Performance Globale
               </h3>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
               <FileText className="w-4 h-4 text-indigo-600" />
               <span>Feuille GM Comité Direction</span>
             </div>
           </div>
 
           {/* Key Executive Insights Callouts */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border-2 border-blue-200/80 shadow-2xs flex items-start gap-3.5">
-              <div className="p-2.5 bg-blue-600 text-white rounded-xl shrink-0 shadow-xs">
-                <TrendingUp className="w-5 h-5" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-blue-200/80 shadow-2xs flex items-start gap-3 sm:gap-3.5">
+              <div className="p-2 sm:p-2.5 bg-blue-600 text-white rounded-xl shrink-0 shadow-xs">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-blue-900">Taux de Clôture Globale</p>
-                <p className="text-2xl sm:text-3xl font-black text-slate-900">{stats.closureRatio}%</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">{stats.closureRatio}%</p>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">Ratio SWO fermés rapporté aux SWO créés sur la période.</p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border-2 border-emerald-200/80 shadow-2xs flex items-start gap-3.5">
-              <div className="p-2.5 bg-emerald-600 text-white rounded-xl shrink-0 shadow-xs">
-                <Award className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-emerald-200/80 shadow-2xs flex items-start gap-3 sm:gap-3.5">
+              <div className="p-2 sm:p-2.5 bg-emerald-600 text-white rounded-xl shrink-0 shadow-xs">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-emerald-900">Résolution Directe (Internal Prod)</p>
-                <p className="text-2xl sm:text-3xl font-black text-slate-900">{stats.directResolutionRate}%</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">{stats.directResolutionRate}%</p>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">SWO créés ET entièrement clos sur le même mois.</p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border-2 border-purple-200/80 shadow-2xs flex items-start gap-3.5">
-              <div className="p-2.5 bg-purple-600 text-white rounded-xl shrink-0 shadow-xs">
-                <History className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-purple-200/80 shadow-2xs flex items-start gap-3 sm:gap-3.5 sm:col-span-2 lg:col-span-1">
+              <div className="p-2 sm:p-2.5 bg-purple-600 text-white rounded-xl shrink-0 shadow-xs">
+                <History className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-purple-900">Rattrapage du Backlog</p>
-                <p className="text-2xl sm:text-3xl font-black text-slate-900">{stats.totals.backlogResolvedInPeriod} SWO</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">{stats.totals.backlogResolvedInPeriod} SWO</p>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">Anciens SWO antérieurs résolus durant cette période.</p>
               </div>
             </div>
           </div>
 
-          {/* Main KPI Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Main KPI Grid - 2 cols on mobile, 3 on tablet, 5 on desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
             <KPICard title="SWO Créés (Entrants)" value={stats.totals.totalCreatedInPeriod} icon={FilePlus} colorClass="text-blue-600" subtitle="Entrants" borderAccent="bg-blue-600" />
             <KPICard title="Créés & Clos Période" value={stats.totals.createdAndClosedInPeriod} icon={CheckSquare} colorClass="text-emerald-600" subtitle="Internal Prod" borderAccent="bg-emerald-600" />
             <KPICard title="Backlog Résolu" value={stats.totals.backlogResolvedInPeriod} icon={History} colorClass="text-purple-600" subtitle="Anciens clos" borderAccent="bg-purple-600" />
             <KPICard title="Stock Période Restant" value={stats.totals.remainingFromPeriod} icon={Layers} colorClass="text-amber-600" subtitle="En suspens" borderAccent="bg-amber-600" />
-            <KPICard title="Total Fermés (Output)" value={stats.totals.totalClosedInPeriod} icon={CheckCircle2} colorClass="text-indigo-600" subtitle="Sorties" borderAccent="bg-indigo-600" />
+            <div className="col-span-2 sm:col-span-1">
+              <KPICard title="Total Fermés (Output)" value={stats.totals.totalClosedInPeriod} icon={CheckCircle2} colorClass="text-indigo-600" subtitle="Sorties" borderAccent="bg-indigo-600" />
+            </div>
           </div>
 
           {/* Executive Commentary Box */}
-          <div className="bg-slate-900 text-white p-5 sm:p-6 rounded-2xl border-2 border-indigo-500/40 shadow-md space-y-3">
+          <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl border-2 border-indigo-500/40 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 border-b border-indigo-500/30 pb-3">
-              <div className="p-2 bg-indigo-600 rounded-xl">
-                <Sparkles className="w-5 h-5 text-indigo-200" />
+              <div className="p-2 bg-indigo-600 rounded-xl shrink-0">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-200" />
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-wider text-indigo-200">
+                <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-indigo-200">
                   Synthèse d'Interprétation Opérationnelle
                 </h4>
-                <p className="text-xs text-slate-300 font-medium">
+                <p className="text-[11px] sm:text-xs text-slate-300 font-medium">
                   Analyse consolidée de l'activité du {period.start || 'début'} au {period.end || 'fin'}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-xs">
               <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1">
                 <p className="font-black text-indigo-300 uppercase text-[11px]">1. Équilibre des Flux</p>
                 <p className="text-slate-200 leading-relaxed">
@@ -692,9 +694,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
           </div>
 
           {/* Executive Notes Slide Footer */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between text-xs text-slate-600 font-black">
+          <div className="p-3.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600 font-black">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
               <span>Analyse consolidée basée sur les dates de création SWO et de clôture officielles.</span>
             </div>
             <span className="font-mono text-[10px] uppercase text-slate-400">GM-REPORT-PPT-V1</span>
@@ -703,9 +705,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
       )}
 
       {(viewMode === 'full' || currentSlide === 2) && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-slate-200 shadow-sm space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* PPT Slide Banner */}
-          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-100 pb-4 gap-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -713,31 +715,31 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </span>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Analyse Dynamique</span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                 SWO Entrants/Sortants & Efficacité Opérationnelle
               </h3>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
               <Activity className="w-4 h-4 text-emerald-600" />
               <span>Capacité de Production</span>
             </div>
           </div>
 
           {/* Side-by-side Chart Slide */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl border-2 border-slate-200 min-h-[450px] flex flex-col justify-between group transition-all duration-300 hover:shadow-md" ref={flowChartRef}>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-200 min-h-[380px] sm:min-h-[440px] flex flex-col justify-between group transition-all duration-300 hover:shadow-md" ref={flowChartRef}>
               <div>
-                <div className="flex justify-between items-center mb-4 shrink-0">
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                    <Timer className="w-5 h-5 text-blue-600" /> 
-                    1. Volumes Globaux (SWO Entrants vs Sortants)
+                <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0 gap-2">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                    <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" /> 
+                    1. Volumes Globaux (Entrants vs Sortants)
                   </h4>
-                  <button onClick={() => downloadChartAsJpg(flowChartRef, 'gm_flux')} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                  <button onClick={() => downloadChartAsJpg(flowChartRef, 'gm_flux')} className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-600 transition-colors shrink-0 cursor-pointer">
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[270px] w-full relative">
-                  <ResponsiveContainer width="99%" height={270}>
+                <div className="h-[240px] sm:h-[270px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
                       data={stats.flowData} 
                       onClick={(data) => data?.activePayload && handleDrillDown(data.activePayload[0].payload, 'FLOW')}
@@ -745,15 +747,15 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                       margin={{ top: 25, right: 10, left: 10, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" /> 
-                      <XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
+                      <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
                       <YAxis tick={{fontSize: 10, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} /> 
                       <Tooltip 
                         cursor={{fill: 'rgba(241, 245, 249, 0.8)'}} 
-                        contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }}
+                        contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)', fontSize: '12px' }}
                       />
-                      <Bar dataKey="value" barSize={55} shape={<ThreeDBarVertical />}>
+                      <Bar dataKey="value" barSize={45} shape={<ThreeDBarVertical />}>
                          {stats.flowData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                         <LabelList dataKey="value" position="top" fill="#0f172a" fontSize={16} fontWeight={900} offset={8} />
+                         <LabelList dataKey="value" position="top" fill="#0f172a" fontSize={14} fontWeight={900} offset={8} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -761,30 +763,30 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               </div>
 
               {/* Projection Summary Box */}
-              <div className="mt-4 p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 text-xs text-slate-800 space-y-1">
-                <div className="flex items-center gap-1.5 font-black text-indigo-900 uppercase text-[11px]">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 text-xs text-slate-800 space-y-1">
+                <div className="flex items-center gap-1.5 font-black text-indigo-900 uppercase text-[10.5px] sm:text-[11px]">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                   <span>Note de Projection : Équilibre des Volumes</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
                   <strong>{stats.totals.totalCreatedInPeriod}</strong> entrées enregistrées vs <strong>{stats.totals.totalClosedInPeriod}</strong> fermetures totales. {stats.totals.totalClosedInPeriod >= stats.totals.totalCreatedInPeriod ? 'La capacité d\'extinction surpasse les entrées (dépollution positive du stock).' : 'Le volume de SWO entrants dépasse le rythme de clôture immédiate (vigilance requise).'}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border-2 border-slate-200 min-h-[450px] flex flex-col justify-between group transition-all duration-300 hover:shadow-md" ref={efficiencyChartRef}>
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-200 min-h-[380px] sm:min-h-[440px] flex flex-col justify-between group transition-all duration-300 hover:shadow-md" ref={efficiencyChartRef}>
               <div>
-                <div className="flex justify-between items-center mb-4 shrink-0">
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-emerald-600" />
+                <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0 gap-2">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 shrink-0" />
                     2. SWO Clos, Backlog et Pending du Mois
                   </h4>
-                  <button onClick={() => downloadChartAsJpg(efficiencyChartRef, 'gm_performance')} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                  <button onClick={() => downloadChartAsJpg(efficiencyChartRef, 'gm_performance')} className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-600 transition-colors shrink-0 cursor-pointer">
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[270px] w-full relative">
-                  <ResponsiveContainer width="99%" height={270}>
+                <div className="h-[240px] sm:h-[270px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
                       data={stats.efficiencyData} 
                       onClick={(data) => data?.activePayload && handleDrillDown(data.activePayload[0].payload, 'EFFICIENCY')}
@@ -792,15 +794,15 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                       margin={{ top: 25, right: 10, left: 10, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" /> 
-                      <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
+                      <XAxis dataKey="name" tick={{fontSize: 9.5, fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
                       <YAxis tick={{fontSize: 10, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} /> 
                       <Tooltip 
                          cursor={{fill: 'rgba(241, 245, 249, 0.8)'}} 
-                         contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }}
+                         contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)', fontSize: '12px' }}
                       />
-                      <Bar dataKey="value" barSize={45} shape={<ThreeDBarVertical />}>
+                      <Bar dataKey="value" barSize={36} shape={<ThreeDBarVertical />}>
                          {stats.efficiencyData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                         <LabelList dataKey="value" position="top" fill="#0f172a" fontSize={16} fontWeight={900} offset={8} />
+                         <LabelList dataKey="value" position="top" fill="#0f172a" fontSize={14} fontWeight={900} offset={8} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -808,12 +810,12 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               </div>
 
               {/* Projection Summary Box */}
-              <div className="mt-4 p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/80 text-xs text-slate-800 space-y-1">
-                <div className="flex items-center gap-1.5 font-black text-emerald-900 uppercase text-[11px]">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/80 text-xs text-slate-800 space-y-1">
+                <div className="flex items-center gap-1.5 font-black text-emerald-900 uppercase text-[10.5px] sm:text-[11px]">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Note de Projection : Ventilation de la Production</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
                   <strong>{stats.totals.createdAndClosedInPeriod}</strong> SWO clos directement le mois même, <strong>{stats.totals.backlogResolvedInPeriod}</strong> anciens SWO dépollués, laissant <strong>{stats.totals.remainingFromPeriod}</strong> SWO en suspens sur la période.
                 </p>
               </div>
@@ -823,9 +825,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
       )}
 
       {(viewMode === 'full' || currentSlide === 3) && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-slate-200 shadow-sm space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* PPT Slide Banner */}
-          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-100 pb-4 gap-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -833,41 +835,41 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </span>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Répartition & Découpage</span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                 Analyse des SWO Période
               </h3>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
               <Globe className="w-4 h-4 text-indigo-600" />
               <span>Répartition Régionale</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Status X Chart */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-slate-200 flex flex-col justify-between group transition-all duration-300 hover:shadow-md min-h-[460px]" ref={pendingChartRef}>
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-200 flex flex-col justify-between group transition-all duration-300 hover:shadow-md min-h-[380px] sm:min-h-[440px]" ref={pendingChartRef}>
               <div>
-                <div className="flex justify-between items-center mb-6 shrink-0">
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                <div className="flex justify-between items-center mb-4 sm:mb-6 shrink-0 gap-2">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                     Ventilation par Statut X (Bloquants / En Cours)
                   </h4>
-                  <button onClick={() => downloadChartAsJpg(pendingChartRef, 'gm_stock_x')} className="p-2 text-slate-400 hover:text-indigo-600">
+                  <button onClick={() => downloadChartAsJpg(pendingChartRef, 'gm_stock_x')} className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-600 shrink-0 cursor-pointer">
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[280px] w-full relative">
-                  <ResponsiveContainer width="99%" height={280}>
-                    <BarChart data={stats.pendingXData} layout="vertical" margin={{ left: 20, right: 35, top: 5, bottom: 5 }}>
+                <div className="h-[250px] sm:h-[280px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.pendingXData} layout="vertical" margin={{ left: 5, right: 30, top: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#cbd5e1" /> 
-                      <XAxis type="number" tick={{fontSize: 10, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} /> 
-                      <YAxis dataKey="name" type="category" width={190} fontSize={10} tick={{fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
+                      <XAxis type="number" tick={{fontSize: 9.5, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} /> 
+                      <YAxis dataKey="name" type="category" width={130} fontSize={9.5} tick={{fontWeight: 900, fill: '#0f172a'}} axisLine={false} tickLine={false} /> 
                       <Tooltip 
                         cursor={{fill: 'rgba(241, 245, 249, 0.8)'}} 
-                        contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }}
+                        contentStyle={{ borderRadius: '15px', border: '1px solid #cbd5e1', boxShadow: '0 10px 20px rgba(0,0,0,0.08)', fontSize: '12px' }}
                       />
-                      <Bar dataKey="value" barSize={32} shape={<ThreeDBarHorizontal />}>
+                      <Bar dataKey="value" barSize={26} shape={<ThreeDBarHorizontal />}>
                          {stats.pendingXData.map((entry, index) => <Cell key={`cell-${index}`} fill={PENDING_X_COLORS[entry.name] || COLORS.tvx} />)}
-                         <LabelList dataKey="value" position="right" fill="#0f172a" fontSize={15} fontWeight={900} offset={8} />
+                         <LabelList dataKey="value" position="right" fill="#0f172a" fontSize={13} fontWeight={900} offset={6} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -875,41 +877,41 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               </div>
 
               {/* Projection Summary Box */}
-              <div className="mt-4 p-3.5 bg-purple-50/60 rounded-xl border border-purple-200/80 text-xs text-slate-800 space-y-1">
-                <div className="flex items-center gap-1.5 font-black text-purple-900 uppercase text-[11px]">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-3.5 bg-purple-50/60 rounded-xl border border-purple-200/80 text-xs text-slate-800 space-y-1">
+                <div className="flex items-center gap-1.5 font-black text-purple-900 uppercase text-[10.5px] sm:text-[11px]">
                   <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                   <span>Note de Projection : Analyse des Blocages</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
                   Motif principal de rétention : <strong>{stats.pendingXData[0]?.name || 'Non renseigné'}</strong> avec <strong>{stats.pendingXData[0]?.value || 0} SWO</strong> ({stats.totals.remainingFromPeriod > 0 ? Math.round(((stats.pendingXData[0]?.value || 0) / stats.totals.remainingFromPeriod) * 100) : 0}% des SWO). Action prioritaire recommandée pour débloquer les traitements.
                 </p>
               </div>
             </div>
 
             {/* Regional SWO Table */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-slate-200 flex flex-col justify-between group transition-all duration-300 hover:shadow-md relative overflow-hidden min-h-[460px]">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-200 flex flex-col justify-between group transition-all duration-300 hover:shadow-md relative overflow-hidden min-h-[380px] sm:min-h-[440px]">
               <div>
-                <div className="flex flex-col sm:flex-row justify-between items-start mb-4 shrink-0 gap-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start mb-3 sm:mb-4 shrink-0 gap-2">
                   <div>
-                    <h4 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-indigo-600" /> 
+                    <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 shrink-0" /> 
                       SWO Période par Région
                     </h4>
-                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mt-0.5">Ventilation des SWO créés non clos par secteur</p>
+                    <p className="text-[9.5px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mt-0.5">Ventilation des SWO créés non clos par secteur</p>
                   </div>
-                  <div className="bg-indigo-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black uppercase shadow-sm border border-indigo-500 tracking-wider">
-                    {stats.totals.remainingFromPeriod} UNITÉS EN SUSPENS
+                  <div className="bg-indigo-600 text-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase shadow-sm border border-indigo-500 tracking-wider shrink-0">
+                    {stats.totals.remainingFromPeriod} EN SUSPENS
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-auto custom-scrollbar max-h-[250px]">
-                  <table className="w-full text-left border-separate border-spacing-y-2">
+                <div className="flex-1 overflow-x-auto custom-scrollbar max-h-[250px] w-full">
+                  <table className="w-full text-left border-separate border-spacing-y-1.5 sm:border-spacing-y-2 min-w-[340px]">
                     <thead>
-                      <tr className="bg-slate-900 text-slate-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                        <th className="px-4 py-3 rounded-l-xl">Région / Zone</th>
-                        <th className="px-4 py-3 text-center">Volume SWO</th>
-                        <th className="px-4 py-3">Part %</th>
-                        <th className="px-4 py-3 text-right rounded-r-xl">Action</th>
+                      <tr className="bg-slate-900 text-slate-100 text-[9.5px] sm:text-[10px] font-black uppercase tracking-widest shadow-sm">
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-l-xl">Région / Zone</th>
+                        <th className="px-2 sm:px-4 py-2.5 sm:py-3 text-center">Volume</th>
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3">Part %</th>
+                        <th className="px-2 sm:px-4 py-2.5 sm:py-3 text-right rounded-r-xl">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -918,36 +920,36 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                           const percentage = Math.round((item.count / (stats.totals.remainingFromPeriod || 1)) * 100);
                           return (
                             <tr key={idx} className="bg-slate-50 hover:bg-indigo-50 transition-all group/row cursor-pointer border border-slate-200" onClick={() => handleRegionDrillDown(item.name)}>
-                              <td className="px-4 py-3 rounded-l-xl">
-                                <div className="flex items-center gap-2.5">
-                                  <Tag className="w-4 h-4 text-indigo-600" />
-                                  <span className="text-xs font-black text-slate-900 uppercase tracking-tight group-hover/row:text-indigo-600">{item.name}</span>
+                              <td className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-l-xl">
+                                <div className="flex items-center gap-2">
+                                  <Tag className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                  <span className="text-[11px] sm:text-xs font-black text-slate-900 uppercase tracking-tight group-hover/row:text-indigo-600 truncate">{item.name}</span>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="text-sm font-black text-indigo-800 bg-indigo-100 px-3 py-1 rounded-xl border border-indigo-200 shadow-2xs inline-block">{item.count}</span>
+                              <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-center">
+                                <span className="text-xs sm:text-sm font-black text-indigo-800 bg-indigo-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl border border-indigo-200 shadow-2xs inline-block">{item.count}</span>
                               </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2.5">
-                                  <div className="w-24 h-2.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                              <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 sm:w-24 h-2 sm:h-2.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
                                     <div 
                                       className="h-full bg-indigo-600 rounded-full transition-all duration-500" 
                                       style={{ width: `${percentage}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs font-black text-slate-900 bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs">{percentage}%</span>
+                                  <span className="text-[10px] sm:text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs">{percentage}%</span>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 rounded-r-xl text-right">
-                                <ArrowRight className="w-4 h-4 text-slate-400 group-hover/row:text-indigo-600 group-hover/row:translate-x-1 transition-all" />
+                              <td className="px-2 sm:px-4 py-2.5 sm:py-3 rounded-r-xl text-right">
+                                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover/row:text-indigo-600 group-hover/row:translate-x-1 transition-all" />
                               </td>
                             </tr>
                           );
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-12 text-center opacity-40">
-                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                          <td colSpan={4} className="py-10 text-center opacity-40">
+                            <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
                             <p className="text-xs font-black uppercase">Aucun SWO résiduel sur la période</p>
                           </td>
                         </tr>
@@ -958,12 +960,12 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               </div>
 
               {/* Projection Summary Box */}
-              <div className="mt-4 p-3.5 bg-blue-50/60 rounded-xl border border-blue-200/80 text-xs text-slate-800 space-y-1">
-                <div className="flex items-center gap-1.5 font-black text-blue-900 uppercase text-[11px]">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-3.5 bg-blue-50/60 rounded-xl border border-blue-200/80 text-xs text-slate-800 space-y-1">
+                <div className="flex items-center gap-1.5 font-black text-blue-900 uppercase text-[10.5px] sm:text-[11px]">
                   <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Note de Projection : Répartition Géographique</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
                   Secteur à plus forte concentration : <strong>{stats.regionStats[0]?.name || 'Inconnue'}</strong> avec <strong>{stats.regionStats[0]?.count || 0} SWO</strong> ({stats.totals.remainingFromPeriod > 0 ? Math.round(((stats.regionStats[0]?.count || 0) / stats.totals.remainingFromPeriod) * 100) : 0}% de l'en-cours résiduel). Zone d'intervention prioritaire pour les opérations.
                 </p>
               </div>
@@ -973,9 +975,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
       )}
 
       {(viewMode === 'full' || currentSlide === 4) && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-slate-200 shadow-sm space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* PPT Slide Banner */}
-          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-100 pb-4 gap-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -983,80 +985,80 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </span>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Analyse Quali & Plan d'Action</span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                 Top 5 des Problématiques Critiques & Solutions
               </h3>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
               <ListFilter className="w-4 h-4 text-indigo-600" />
-              <span>Analyse de la colonne Description (Raw Data)</span>
+              <span>Analyse Sémantique</span>
             </div>
           </div>
 
           {/* Top Summary Banner for Slide 4 */}
-          <div className="bg-slate-900 text-white p-5 rounded-2xl border-2 border-indigo-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border-2 border-indigo-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 sm:gap-4 shadow-sm">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-400" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
                 <span className="text-xs font-black text-indigo-300 uppercase tracking-wider">Analyse Sémantique — Mois Sélectionné</span>
-                <span className="ml-2 px-2.5 py-0.5 bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-[10px] font-black rounded-lg">
+                <span className="px-2 py-0.5 bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-[9.5px] sm:text-[10px] font-black rounded-lg">
                   Période : {period.start} au {period.end}
                 </span>
               </div>
-              <p className="text-sm font-medium text-slate-200">
+              <p className="text-xs sm:text-sm font-medium text-slate-200">
                 Catégorisation rigoureuse sur la période sélectionnée basée sur l'analyse sémantique des descriptions d'incidents déclarés dans les SWO.
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
-                <span className="block text-[10px] font-bold text-slate-400 uppercase">SWO du Mois Analysés</span>
-                <span className="text-lg font-black text-white">{topProblems.totalAnalyzed}</span>
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="bg-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/10 text-center flex-1 sm:flex-initial">
+                <span className="block text-[9.5px] sm:text-[10px] font-bold text-slate-400 uppercase">SWO Analysés</span>
+                <span className="text-base sm:text-lg font-black text-white">{topProblems.totalAnalyzed}</span>
               </div>
-              <div className="bg-indigo-600 px-4 py-2 rounded-xl text-center shadow-sm">
-                <span className="block text-[10px] font-bold text-indigo-200 uppercase">Top Problématique</span>
-                <span className="text-lg font-black text-white">{topProblems.topCategories[0]?.count || 0} SWO</span>
+              <div className="bg-indigo-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-center shadow-sm flex-1 sm:flex-initial">
+                <span className="block text-[9.5px] sm:text-[10px] font-bold text-indigo-200 uppercase">Top Motif</span>
+                <span className="text-base sm:text-lg font-black text-white">{topProblems.topCategories[0]?.count || 0} SWO</span>
               </div>
             </div>
           </div>
 
           {/* Grid of Top 5 Critical Problems & Solutions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {topProblems.topCategories.map((item, idx) => {
               const CategoryIcon = item.icon;
               return (
                 <div 
                   key={item.id} 
-                  className={`bg-white p-6 rounded-2xl border-2 ${item.borderAccent} shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden`}
+                  className={`bg-white p-4 sm:p-6 rounded-2xl border-2 ${item.borderAccent} shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-3.5 sm:space-y-4 relative overflow-hidden`}
                 >
                   {/* Card Header */}
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${item.badgeColor} shadow-2xs`}>
+                    <div className="flex justify-between items-center gap-2 flex-wrap">
+                      <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider ${item.badgeColor} shadow-2xs`}>
                         {item.badgeText}
                       </span>
-                      <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl text-slate-900 border border-slate-200">
-                        <span className="text-xs font-black">{item.count} SWO</span>
-                        <span className="text-[10px] font-extrabold text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                      <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl text-slate-900 border border-slate-200">
+                        <span className="text-[11px] sm:text-xs font-black">{item.count} SWO</span>
+                        <span className="text-[9.5px] sm:text-[10px] font-extrabold text-indigo-600 bg-white px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200">
                           {item.percentage}%
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2.5 pt-1">
-                      <div className="p-2.5 rounded-xl bg-slate-100 text-slate-800 shrink-0">
-                        <CategoryIcon className="w-5 h-5" />
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-100 text-slate-800 shrink-0">
+                        <CategoryIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                      <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                         {idx + 1}. {item.category}
                       </h4>
                     </div>
                   </div>
 
                   {/* Problem Description Box */}
-                  <div className={`p-4 rounded-xl border ${item.problemBg} space-y-1.5`}>
-                    <div className="flex items-center gap-1.5 font-black text-red-700 uppercase text-[11px]">
-                      <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                      <span>Problème Identifié (Motif Récurrent) :</span>
+                  <div className={`p-3 sm:p-4 rounded-xl border ${item.problemBg} space-y-1`}>
+                    <div className="flex items-center gap-1.5 font-black text-red-700 uppercase text-[10.5px] sm:text-[11px]">
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                      <span>Problème Identifié :</span>
                     </div>
                     <p className="text-xs text-slate-800 leading-relaxed font-semibold">
                       {item.problem}
@@ -1064,10 +1066,10 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   </div>
 
                   {/* Solution Box */}
-                  <div className={`p-4 rounded-xl border ${item.solutionBg} space-y-1.5`}>
-                    <div className="flex items-center gap-1.5 font-black text-emerald-800 uppercase text-[11px]">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Solution Recommandée & Plan d'Action :</span>
+                  <div className={`p-3 sm:p-4 rounded-xl border ${item.solutionBg} space-y-1`}>
+                    <div className="flex items-center gap-1.5 font-black text-emerald-800 uppercase text-[10.5px] sm:text-[11px]">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Solution & Plan d'Action :</span>
                     </div>
                     <p className="text-xs text-slate-800 leading-relaxed font-semibold">
                       {item.solution}
@@ -1078,7 +1080,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   <div className="pt-2 border-t border-slate-100 flex justify-end">
                     <button
                       onClick={() => handleProblemCategoryDrillDown(item.category, item.matchedRows)}
-                      className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group"
+                      className="w-full sm:w-auto px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group cursor-pointer"
                     >
                       <span>Inspecter les {item.count} SWO</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1090,9 +1092,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
           </div>
 
           {/* Slide 4 Footer note */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between text-xs text-slate-600 font-black">
+          <div className="p-3.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600 font-black">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
               <span>Analyse sémantique extraite directement des colonnes Description / Short description de la table Raw Data.</span>
             </div>
             <span className="font-mono text-[10px] uppercase text-slate-400">GM-SLIDE-04-QUAL</span>
@@ -1101,9 +1103,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
       )}
 
       {(viewMode === 'full' || currentSlide === 5) && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-slate-200 shadow-sm space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* PPT Slide Banner */}
-          <div className="flex justify-between items-start border-b-2 border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-100 pb-4 gap-2">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -1111,68 +1113,68 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </span>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Success Room & CAPEX</span>
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                 Success Room Activité (SWO CAPEX Clos)
               </h3>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
               <Zap className="w-4 h-4 text-amber-600" />
               <span>Correction GE, Hybride, Batteries Leoch & CAPEX</span>
             </div>
           </div>
 
           {/* Summary Banner */}
-          <div className="bg-slate-900 text-white p-5 rounded-2xl border-2 border-amber-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border-2 border-amber-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 sm:gap-4 shadow-sm">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                 <span className="text-xs font-black text-amber-300 uppercase tracking-wider">Analyse des SWO Fermés à Haute Valeur (CAPEX)</span>
-                <span className="ml-2 px-2.5 py-0.5 bg-amber-500/30 text-amber-200 border border-amber-400/30 text-[10px] font-black rounded-lg">
+                <span className="px-2 py-0.5 bg-amber-500/30 text-amber-200 border border-amber-400/30 text-[9.5px] sm:text-[10px] font-black rounded-lg">
                   Période : {period.start} au {period.end}
                 </span>
               </div>
-              <p className="text-sm font-medium text-slate-200">
+              <p className="text-xs sm:text-sm font-medium text-slate-200">
                 Suivi des interventions de correction de fonctionnement des groupes électrogènes, systèmes hybrides, remplacement des batteries backup Leoch et investissements structurants clos sur la période.
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
-                <span className="block text-[10px] font-bold text-slate-400 uppercase">SWO Total Fermés</span>
-                <span className="text-lg font-black text-white">{successRoomStats.totalClosed}</span>
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="bg-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/10 text-center flex-1 sm:flex-initial">
+                <span className="block text-[9.5px] sm:text-[10px] font-bold text-slate-400 uppercase">SWO Fermés</span>
+                <span className="text-base sm:text-lg font-black text-white">{successRoomStats.totalClosed}</span>
               </div>
-              <div className="bg-amber-600 px-4 py-2 rounded-xl text-center shadow-sm">
-                <span className="block text-[10px] font-bold text-amber-100 uppercase">SWO CAPEX Clos</span>
-                <span className="text-lg font-black text-white">{successRoomStats.totalCapex} ({successRoomStats.capexRatio}%)</span>
+              <div className="bg-amber-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-center shadow-sm flex-1 sm:flex-initial">
+                <span className="block text-[9.5px] sm:text-[10px] font-bold text-amber-100 uppercase">CAPEX Clos</span>
+                <span className="text-base sm:text-lg font-black text-white">{successRoomStats.totalCapex} ({successRoomStats.capexRatio}%)</span>
               </div>
             </div>
           </div>
 
           {/* CAPEX Categories Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Card 1: GE */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-red-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-red-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3.5 sm:space-y-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-red-600 text-white">
                     CORRECTION FONCTIONNEMENT GE • CAPEX
                   </span>
-                  <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl text-slate-900 border border-slate-200">
-                    <span className="text-xs font-black">{successRoomStats.geRows.length} SWO</span>
-                    <span className="text-[10px] font-extrabold text-red-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl text-slate-900 border border-slate-200">
+                    <span className="text-[11px] sm:text-xs font-black">{successRoomStats.geRows.length} SWO</span>
+                    <span className="text-[9.5px] sm:text-[10px] font-extrabold text-red-600 bg-white px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200">
                       {successRoomStats.totalCapex > 0 ? Math.round((successRoomStats.geRows.length / successRoomStats.totalCapex) * 100) : 0}%
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-xl bg-red-50 text-red-700 shrink-0">
-                    <Zap className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-red-50 text-red-700 shrink-0">
+                    <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                     Groupes Électrogènes & Moteurs
                   </h4>
                 </div>
               </div>
-              <div className="p-4 rounded-xl border bg-red-50/80 border-red-200 text-slate-800 space-y-1.5">
+              <div className="p-3 sm:p-4 rounded-xl border bg-red-50/80 border-red-200 text-slate-800 space-y-1">
                 <p className="text-xs font-semibold leading-relaxed">
                   Interventions lourdes de remise en état des groupes électrogènes (révision moteur, remplacement d'alternateur, injecteurs, pompes et correction des défauts majeurs de génération).
                 </p>
@@ -1180,7 +1182,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               <div className="pt-2 border-t border-slate-100 flex justify-end">
                 <button
                   onClick={() => handleProblemCategoryDrillDown("Correction GE & Moteurs (CAPEX)", successRoomStats.geRows)}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group"
+                  className="w-full sm:w-auto px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group cursor-pointer"
                 >
                   <span>Inspecter les {successRoomStats.geRows.length} SWO</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1189,29 +1191,29 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             </div>
 
             {/* Card 2: Hybrid */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-blue-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-blue-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3.5 sm:space-y-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white">
                     SYSTÈMES HYBRIDES & SOLAIRE • CAPEX
                   </span>
-                  <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl text-slate-900 border border-slate-200">
-                    <span className="text-xs font-black">{successRoomStats.hybridRows.length} SWO</span>
-                    <span className="text-[10px] font-extrabold text-blue-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl text-slate-900 border border-slate-200">
+                    <span className="text-[11px] sm:text-xs font-black">{successRoomStats.hybridRows.length} SWO</span>
+                    <span className="text-[9.5px] sm:text-[10px] font-extrabold text-blue-600 bg-white px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200">
                       {successRoomStats.totalCapex > 0 ? Math.round((successRoomStats.hybridRows.length / successRoomStats.totalCapex) * 100) : 0}%
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-xl bg-blue-50 text-blue-700 shrink-0">
-                    <Activity className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-700 shrink-0">
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                     Hybridation & Énergie Solaire (PV)
                   </h4>
                 </div>
               </div>
-              <div className="p-4 rounded-xl border bg-blue-50/80 border-blue-200 text-slate-800 space-y-1.5">
+              <div className="p-3 sm:p-4 rounded-xl border bg-blue-50/80 border-blue-200 text-slate-800 space-y-1">
                 <p className="text-xs font-semibold leading-relaxed">
                   Optimisation et maintenance des systèmes hybrides et parcs solaires PV pour réduire la consommation de carburant et fiabiliser la production autonome des sites.
                 </p>
@@ -1219,7 +1221,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               <div className="pt-2 border-t border-slate-100 flex justify-end">
                 <button
                   onClick={() => handleProblemCategoryDrillDown("Systèmes Hybrides & Solaire (CAPEX)", successRoomStats.hybridRows)}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group"
+                  className="w-full sm:w-auto px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group cursor-pointer"
                 >
                   <span>Inspecter les {successRoomStats.hybridRows.length} SWO</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1228,29 +1230,29 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             </div>
 
             {/* Card 3: Batteries Leoch */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-purple-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-purple-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3.5 sm:space-y-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white">
                     BATTERIES BACKUP & LEOCH • CAPEX
                   </span>
-                  <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl text-slate-900 border border-slate-200">
-                    <span className="text-xs font-black">{successRoomStats.batteryRows.length} SWO</span>
-                    <span className="text-[10px] font-extrabold text-purple-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl text-slate-900 border border-slate-200">
+                    <span className="text-[11px] sm:text-xs font-black">{successRoomStats.batteryRows.length} SWO</span>
+                    <span className="text-[9.5px] sm:text-[10px] font-extrabold text-purple-600 bg-white px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200">
                       {successRoomStats.totalCapex > 0 ? Math.round((successRoomStats.batteryRows.length / successRoomStats.totalCapex) * 100) : 0}%
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-xl bg-purple-50 text-purple-700 shrink-0">
-                    <Cpu className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-700 shrink-0">
+                    <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                     Changements des Batteries Backup et autres
                   </h4>
                 </div>
               </div>
-              <div className="p-4 rounded-xl border bg-purple-50/80 border-purple-200 text-slate-800 space-y-1.5">
+              <div className="p-3 sm:p-4 rounded-xl border bg-purple-50/80 border-purple-200 text-slate-800 space-y-1">
                 <p className="text-xs font-semibold leading-relaxed">
                   Remplacement planifié ou d'urgence des parcs de batteries de backup (notamment de marque Leoch et autres) pour garantir l'autonomie critique DC lors des coupures secteur.
                 </p>
@@ -1258,7 +1260,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               <div className="pt-2 border-t border-slate-100 flex justify-end">
                 <button
                   onClick={() => handleProblemCategoryDrillDown("Changements des Batteries Backup et autres", successRoomStats.batteryRows)}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-purple-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group"
+                  className="w-full sm:w-auto px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-purple-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group cursor-pointer"
                 >
                   <span>Inspecter les {successRoomStats.batteryRows.length} SWO</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1267,29 +1269,29 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             </div>
 
             {/* Card 4: Other CAPEX */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-emerald-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-emerald-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3.5 sm:space-y-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
                     AUTRES INVESTISSEMENTS • CAPEX
                   </span>
-                  <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl text-slate-900 border border-slate-200">
-                    <span className="text-xs font-black">{successRoomStats.otherCapexRows.length} SWO</span>
-                    <span className="text-[10px] font-extrabold text-emerald-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl text-slate-900 border border-slate-200">
+                    <span className="text-[11px] sm:text-xs font-black">{successRoomStats.otherCapexRows.length} SWO</span>
+                    <span className="text-[9.5px] sm:text-[10px] font-extrabold text-emerald-600 bg-white px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200">
                       {successRoomStats.totalCapex > 0 ? Math.round((successRoomStats.otherCapexRows.length / successRoomStats.totalCapex) * 100) : 0}%
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 shrink-0">
-                    <Wrench className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-700 shrink-0">
+                    <Wrench className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                     Autres Interventions CAPEX & Équipements
                   </h4>
                 </div>
               </div>
-              <div className="p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-slate-800 space-y-1.5">
+              <div className="p-3 sm:p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-slate-800 space-y-1">
                 <p className="text-xs font-semibold leading-relaxed">
                   Autres travaux de modernisation et de mise aux normes structurelles (redresseurs principaux, inverseurs ATS lourds, onduleurs et équipements énergie).
                 </p>
@@ -1297,7 +1299,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
               <div className="pt-2 border-t border-slate-100 flex justify-end">
                 <button
                   onClick={() => handleProblemCategoryDrillDown("Autres Interventions CAPEX", successRoomStats.otherCapexRows)}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group"
+                  className="w-full sm:w-auto px-3.5 sm:px-4 py-2 bg-slate-900 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs group cursor-pointer"
                 >
                   <span>Inspecter les {successRoomStats.otherCapexRows.length} SWO</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1307,9 +1309,9 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
           </div>
 
           {/* Slide 5 Footer note */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between text-xs text-slate-600 font-black">
+          <div className="p-3.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600 font-black">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-600" />
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
               <span>Success Room Activité — Filtrage basé sur la clôture officielle des SWO à caractère CAPEX sur la période.</span>
             </div>
             <span className="font-mono text-[10px] uppercase text-slate-400">GM-SLIDE-05-SUCCESS-ROOM</span>
@@ -1319,46 +1321,46 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
 
       {/* DRILLDOWN MODAL */}
       {drillDownData && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700 animate-in zoom-in-95">
-             <div className="bg-slate-900 text-white p-5 flex justify-between items-center shrink-0 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                   <div className="bg-indigo-600 p-2 rounded-xl">
-                      <ListFilter className="w-5 h-5 text-white" />
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-5xl h-[90vh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700 animate-in zoom-in-95">
+             <div className="bg-slate-900 text-white p-4 sm:p-5 flex justify-between items-center shrink-0 border-b border-slate-800">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                   <div className="bg-indigo-600 p-2 rounded-xl shrink-0">
+                      <ListFilter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                    </div>
                    <div>
-                      <h3 className="text-lg font-black uppercase tracking-tight">{drillDownTitle}</h3>
-                      <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{drillDownData.length} Dossiers Identifiés</p>
+                      <h3 className="text-sm sm:text-lg font-black uppercase tracking-tight line-clamp-1">{drillDownTitle}</h3>
+                      <p className="text-slate-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">{drillDownData.length} Dossiers Identifiés</p>
                    </div>
                 </div>
-                <button onClick={() => setDrillDownData(null)} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
+                <button onClick={() => setDrillDownData(null)} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
              </div>
-             <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+             <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 bg-slate-50 dark:bg-slate-950">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                    {drillDownData.map((row, idx) => (
-                    <div key={idx} className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all flex flex-col justify-between group">
+                    <div key={idx} className="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all flex flex-col justify-between group">
                        <div>
-                          <div className="flex justify-between items-start mb-3">
-                             <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 uppercase">
+                          <div className="flex justify-between items-start mb-2.5 gap-2">
+                             <span className="text-[9.5px] sm:text-[10px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900 uppercase truncate">
                                 {row["State SWO"]}
                              </span>
-                             <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-slate-400"># {row["N° SWO"]}</span>
-                                <span className="text-[9px] font-mono font-bold text-indigo-500 mt-0.5 uppercase">{row["X"]}</span>
+                             <div className="flex flex-col items-end shrink-0">
+                                <span className="text-[9.5px] sm:text-[10px] font-black text-slate-400"># {row["N° SWO"]}</span>
+                                <span className="text-[8.5px] sm:text-[9px] font-mono font-bold text-indigo-500 mt-0.5 uppercase">{row["X"]}</span>
                              </div>
                           </div>
-                          <h4 className="font-black text-slate-900 dark:text-white mb-1 group-hover:text-indigo-600 transition-colors uppercase truncate">{row["Nom du site"]}</h4>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase mb-3 flex items-center gap-1.5"><MapPin className="w-3 h-3 text-indigo-500" /> {row["Region"]}</p>
-                          <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl mb-4 italic line-clamp-2 leading-relaxed border border-slate-100 dark:border-slate-800">
+                          <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white mb-1 group-hover:text-indigo-600 transition-colors uppercase truncate">{row["Nom du site"]}</h4>
+                          <p className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase mb-2 sm:mb-3 flex items-center gap-1.5"><MapPin className="w-3 h-3 text-indigo-500 shrink-0" /> {row["Region"]}</p>
+                          <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-2.5 sm:p-3 rounded-xl mb-3 sm:mb-4 italic line-clamp-2 leading-relaxed border border-slate-100 dark:border-slate-800">
                              {row["Description"] || row["Short description"] || "Pas de description."}
                           </div>
                        </div>
-                       <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                       <div className="pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                           <button 
                             onClick={() => { onFilterChange("N° SWO", String(row["N° SWO"])); onSwitchToData(); setDrillDownData(null); }}
-                            className="w-full py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            className="w-full py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
                           >
                              Inspecter le dossier
                           </button>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Search, Layout, Database, Calendar, Timer, 
-  Briefcase, Battery, Settings2, User, FileText, MapPin, 
+  Search, Layout, Calendar, Timer, 
+  Briefcase, Battery, Settings2, FileText, MapPin, 
   Sparkles, ArrowRight, X, Command, Sliders
 } from 'lucide-react';
 import { GlobalFileRow } from '../types';

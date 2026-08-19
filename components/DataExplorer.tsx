@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { GlobalFileRow, XStatus } from '../types';
-import { COLUMNS, X_OPTIONS, getRowColorClass } from '../constants';
+import { COLUMNS, X_OPTIONS } from '../constants';
 import { parseDate } from '../utils/dateHelpers';
 import * as XLSX from 'xlsx';
 import { 
   Search, 
   Filter, 
-  SlidersHorizontal, 
   Table, 
   LayoutGrid, 
   Columns, 
@@ -22,18 +21,14 @@ import {
   Save, 
   Copy, 
   Check, 
-  Sparkles, 
   Layers, 
   MapPin, 
   Calendar, 
   Clock, 
   AlertTriangle, 
   CheckCircle2, 
-  FileSpreadsheet, 
   FilterX, 
-  Maximize2,
-  ListFilter,
-  RefreshCw
+  ListFilter
 } from 'lucide-react';
 
 interface DataExplorerProps {
@@ -93,9 +88,7 @@ const formatDateTime = (val: string | number | Date | null | undefined): string 
 export const DataExplorer: React.FC<DataExplorerProps> = ({
   data,
   onUpdateRow,
-  filters,
-  onFilterChange,
-  onApplyFilters,
+  filters = {},
   onSaveDatabase,
   canEdit = true
 }) => {
@@ -109,7 +102,6 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [showFilterPanel, setShowFilterPanel] = useState(false);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -593,7 +585,6 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
                   </tr>
                 ) : (
                   paginatedData.map(({ row, originalIndex }, idx) => {
-                    const statusX = String(row["X"] || '');
                     return (
                       <tr 
                         key={originalIndex}

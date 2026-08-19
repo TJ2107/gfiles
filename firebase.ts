@@ -40,6 +40,7 @@ const isForceD1Active = (): boolean => {
 const triggerQuotaExceeded = () => {
   hasDetectedQuotaError = true;
   if (typeof window !== 'undefined') {
+    localStorage.setItem('force_d1_active', 'true');
     window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
   }
 };
@@ -243,25 +244,30 @@ export const registerUserWithoutLoggingIn = async (email: string, _pass: string,
 export const fetchAllUsers = async (): Promise<AuthUser[]> => {
   const usersMap = new Map<string, AuthUser>();
 
-  // 1. Fetch from Firestore
-  try {
-    const { getDocs, collection } = await import('firebase/firestore');
-    const snap = await getDocs(collection(db, 'users'));
-    snap.forEach(d => {
-      const data = d.data();
-      const em = (data.email || d.id).toLowerCase();
-      const isSuper = em === 'cyber.kan587@gmail.com';
-      usersMap.set(em, {
-        uid: d.id,
-        email: data.email || d.id,
-        displayName: data.name || data.displayName || data.email,
-        role: isSuper ? 'Admin' : (data.role || 'User'),
-        status: isSuper ? 'approved' : (data.status || 'pending'),
-        createdAt: data.createdAt || Date.now()
+  // 1. Fetch from Firestore only if quota not exceeded and D1 not forced
+  if (!isForceD1Active() && !hasDetectedQuotaError) {
+    try {
+      const { getDocs, collection } = await import('firebase/firestore');
+      const snap = await getDocs(collection(db, 'users'));
+      snap.forEach(d => {
+        const data = d.data();
+        const em = (data.email || d.id).toLowerCase();
+        const isSuper = em === 'cyber.kan587@gmail.com';
+        usersMap.set(em, {
+          uid: d.id,
+          email: data.email || d.id,
+          displayName: data.name || data.displayName || data.email,
+          role: isSuper ? 'Admin' : (data.role || 'User'),
+          status: isSuper ? 'approved' : (data.status || 'pending'),
+          createdAt: data.createdAt || Date.now()
+        });
       });
-    });
-  } catch (err) {
-    console.warn("Firestore fetch users failed, falling back to server API...", err);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota') || errMsg.includes('transport') || errMsg.includes('WebChannelConnection')) {
+        triggerQuotaExceeded();
+      }
+    }
   }
 
   // 2. Fetch from Server API and merge
@@ -270,7 +276,7 @@ export const fetchAllUsers = async (): Promise<AuthUser[]> => {
     if (res.ok) {
       const body = await res.json();
       if (body.success && Array.isArray(body.users)) {
-        body.users.forEach((u: any) => {
+        body.users.forEach((u: { uid?: string; email?: string; displayName?: string; role?: 'User' | 'Manager' | 'Admin'; status?: 'approved' | 'pending' | 'rejected' }) => {
           const em = (u.email || u.uid).toLowerCase();
           const isSuper = em === 'cyber.kan587@gmail.com';
           const existing = usersMap.get(em);
@@ -291,8 +297,8 @@ export const fetchAllUsers = async (): Promise<AuthUser[]> => {
         });
       }
     }
-  } catch (e) {
-    console.warn("Server API fetch users error:", e);
+  } catch {
+    // Quiet fallback
   }
 
   // Always ensure Super Admin is in the list
@@ -318,8 +324,8 @@ export const subscribeToUsers = (callback: (users: AuthUser[]) => void): () => v
     try {
       const users = await fetchAllUsers();
       callback(users);
-    } catch (e) {
-      console.warn("Error updating user list subscription:", e);
+    } catch {
+      // Quiet fallback
     }
   };
 
@@ -327,44 +333,59 @@ export const subscribeToUsers = (callback: (users: AuthUser[]) => void): () => v
   handleUpdate();
 
   // Firestore live subscription
-  try {
-    import('firebase/firestore').then(({ onSnapshot, collection }) => {
-      unsubscribeFirestore = onSnapshot(collection(db, 'users'), () => {
-        handleUpdate();
-      }, (err) => {
-        console.warn("Live users snapshot error:", err);
-      });
-    });
-  } catch (e) {
-    console.warn("Failed to attach live Firestore users listener:", e);
+  if (!isForceD1Active() && !hasDetectedQuotaError) {
+    try {
+      import('firebase/firestore').then(({ onSnapshot, collection }) => {
+        unsubscribeFirestore = onSnapshot(collection(db, 'users'), () => {
+          handleUpdate();
+        }, (err) => {
+          const errMsg = err?.message || String(err);
+          if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota') || errMsg.includes('transport') || errMsg.includes('WebChannelConnection')) {
+            triggerQuotaExceeded();
+            if (unsubscribeFirestore) {
+              try { unsubscribeFirestore(); } catch {}
+            }
+          }
+        });
+      }).catch(() => {});
+    } catch {
+      // Quiet fallback
+    }
   }
 
   // Periodic fallback poll (every 5 seconds) to catch any server-side registrations
   const pollInterval = setInterval(handleUpdate, 5000);
 
   return () => {
-    if (unsubscribeFirestore) unsubscribeFirestore();
+    if (unsubscribeFirestore) {
+      try { unsubscribeFirestore(); } catch {}
+    }
     clearInterval(pollInterval);
   };
 };
 
 export const updateUserStatusAndRole = async (uid: string, role: string, status: 'pending' | 'approved' | 'rejected', email?: string): Promise<void> => {
   // 1. Update in Firestore if available
-  try {
-    if (uid) {
-      await setDoc(doc(db, 'users', uid), {
-        role,
-        status
-      }, { merge: true });
+  if (!isForceD1Active() && !hasDetectedQuotaError) {
+    try {
+      if (uid) {
+        await setDoc(doc(db, 'users', uid), {
+          role,
+          status
+        }, { merge: true });
+      }
+      if (email && email.toLowerCase() !== uid.toLowerCase()) {
+        await setDoc(doc(db, 'users', email.replace(/[^a-zA-Z0-9]/g, '_')), {
+          role,
+          status
+        }, { merge: true });
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota')) {
+        triggerQuotaExceeded();
+      }
     }
-    if (email && email.toLowerCase() !== uid.toLowerCase()) {
-      await setDoc(doc(db, 'users', email.replace(/[^a-zA-Z0-9]/g, '_')), {
-        role,
-        status
-      }, { merge: true });
-    }
-  } catch (err) {
-    console.warn("Firestore update user error, falling back to server API...", err);
   }
 
   // 2. Always sync with server API
@@ -375,24 +396,29 @@ export const updateUserStatusAndRole = async (uid: string, role: string, status:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role, status })
     });
-  } catch (err) {
-    console.error("Server API update user error:", err);
+  } catch {
+    // Quiet fallback
   }
 };
 
 export const deleteUserAccount = async (uid: string, email?: string): Promise<void> => {
   // 1. Delete in Firestore
-  try {
-    const { deleteDoc } = await import('firebase/firestore');
-    if (uid) {
-      await deleteDoc(doc(db, 'users', uid));
+  if (!isForceD1Active() && !hasDetectedQuotaError) {
+    try {
+      const { deleteDoc } = await import('firebase/firestore');
+      if (uid) {
+        await deleteDoc(doc(db, 'users', uid));
+      }
+      if (email) {
+        await deleteDoc(doc(db, 'users', email.toLowerCase()));
+        await deleteDoc(doc(db, 'users', email.replace(/[^a-zA-Z0-9]/g, '_')));
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota')) {
+        triggerQuotaExceeded();
+      }
     }
-    if (email) {
-      await deleteDoc(doc(db, 'users', email.toLowerCase()));
-      await deleteDoc(doc(db, 'users', email.replace(/[^a-zA-Z0-9]/g, '_')));
-    }
-  } catch (err) {
-    console.warn("Firestore delete user error, falling back to server API...", err);
   }
 
   // 2. Delete on Server
@@ -401,8 +427,8 @@ export const deleteUserAccount = async (uid: string, email?: string): Promise<vo
     await fetch(`/api/auth/users/${target}`, {
       method: 'DELETE'
     });
-  } catch (err) {
-    console.error("Server API delete user error:", err);
+  } catch {
+    // Quiet fallback
   }
 };
 
@@ -430,36 +456,52 @@ export const updatePresence = async (user: AuthUser, activeTab: string) => {
     const errMsg = error instanceof Error ? error.message : String(error);
     if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota exceeded') || errMsg.includes('quota') || errMsg.includes('Quota limit exceeded')) {
       triggerQuotaExceeded();
-    } else {
-      console.warn('Presence sync notice:', errMsg);
     }
   }
 };
 
 export const subscribeToPresence = (callback: (presences: UserPresence[]) => void) => {
+  const defaultFallbackPresences: UserPresence[] = [{
+    userId: 'admin-id',
+    email: 'cyber.kan587@gmail.com',
+    name: 'Administrateur',
+    module: 'Relais D1 / Failover Actif',
+    lastActive: Date.now()
+  }];
+
   if (isForceD1Active() || hasDetectedQuotaError) {
-    callback([{
-      userId: 'admin-id',
-      email: 'cyber.kan587@gmail.com',
-      name: 'Administrateur',
-      module: 'D1 Backup Mode',
-      lastActive: Date.now()
-    }]);
+    callback(defaultFallbackPresences);
     return () => {};
   }
-  const presenceCol = collection(db, 'presence');
-  return onSnapshot(presenceCol, (snapshot) => {
-    const list: UserPresence[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data() as UserPresence;
-      list.push(data);
+
+  let unsubscriber: (() => void) | null = null;
+
+  try {
+    const presenceCol = collection(db, 'presence');
+    unsubscriber = onSnapshot(presenceCol, (snapshot) => {
+      const list: UserPresence[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data() as UserPresence;
+        list.push(data);
+      });
+      callback(list.length > 0 ? list : defaultFallbackPresences);
+    }, (error) => {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota exceeded') || errMsg.includes('quota') || errMsg.includes('Quota limit exceeded')) {
+        triggerQuotaExceeded();
+        callback(defaultFallbackPresences);
+        if (unsubscriber) {
+          try { unsubscriber(); } catch {}
+        }
+      }
     });
-    callback(list);
-  }, (error) => {
-    console.error('Error listening to presence:', error);
-    const errMsg = error instanceof Error ? error.message : String(error);
-    if (errMsg.includes('resource-exhausted') || errMsg.includes('Quota exceeded') || errMsg.includes('quota') || errMsg.includes('Quota limit exceeded')) {
-      triggerQuotaExceeded();
+  } catch {
+    callback(defaultFallbackPresences);
+  }
+
+  return () => {
+    if (unsubscriber) {
+      try { unsubscriber(); } catch {}
     }
-  });
+  };
 };

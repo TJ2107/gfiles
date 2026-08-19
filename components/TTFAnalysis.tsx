@@ -217,64 +217,64 @@ export const TTFAnalysis: React.FC<TTFAnalysisProps> = ({ data, onFilterChange, 
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-8 bg-gray-50 min-h-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-3 sm:p-6 space-y-6 sm:space-y-8 bg-gray-50 min-h-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-           <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-2">
-             <Timer className="w-8 h-8 text-indigo-600" /> 
+           <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-2">
+             <Timer className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 shrink-0" /> 
              SLA Adhérence & TTF
            </h2>
-           <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Analyse des délais de traitement (Time to Fix).</p>
+           <p className="text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-0.5 sm:mt-1">Analyse des délais de traitement (Time to Fix).</p>
         </div>
-        <div className="flex gap-2">
-            <button onClick={() => setClosingDateFilter({start:'', end:''})} className="p-2.5 bg-white border rounded-xl hover:bg-gray-50 text-slate-400 transition-all"><RotateCcw className="w-5 h-5" /></button>
+        <div className="flex gap-2 self-end sm:self-auto">
+            <button onClick={() => setClosingDateFilter({start:'', end:''})} className="p-2 sm:p-2.5 bg-white border rounded-xl hover:bg-gray-50 text-slate-400 transition-all" title="Réinitialiser les filtres"><RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" /></button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <KPICard title="SWO Analysés" value={analysis.kpis.totalAnalyzed} icon={Activity} colorClass="text-slate-900" />
         <KPICard title="Respect SLA" value={analysis.kpis.totalMet} icon={ShieldCheck} colorClass="text-emerald-600" subtitle="Dossiers" />
         <KPICard title="Hors Délais" value={analysis.kpis.totalMissed} icon={AlertTriangle} colorClass="text-rose-600" subtitle="Échecs" />
         <KPICard title="Taux de Conformité" value={`${analysis.kpis.complianceRate}%`} icon={Target} colorClass="text-indigo-600" />
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Filter className="w-3.5 h-3.5" /> Filtrer Priorités
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="space-y-2 sm:space-y-3">
+            <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Filtrer Priorités
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {PRIORITY_OPTIONS.map(p => (
                 <button 
                   key={p} 
                   onClick={() => togglePriority(p)} 
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${selectedPriorities.includes(p) ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all border ${selectedPriorities.includes(p) ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
                 >
                   {p}
                 </button>
               ))}
             </div>
           </div>
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5" /> Période de Clôture
+          <div className="space-y-2 sm:space-y-3">
+            <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Période de Clôture
             </label>
-            <div className="flex items-center gap-3">
-              <input type="date" className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" value={closingDateFilter.start} onChange={(e) => setClosingDateFilter(p => ({...p, start: e.target.value}))} />
-              <span className="text-slate-300 font-black">TO</span>
-              <input type="date" className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" value={closingDateFilter.end} onChange={(e) => setClosingDateFilter(p => ({...p, end: e.target.value}))} />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <input type="date" className="flex-1 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" value={closingDateFilter.start} onChange={(e) => setClosingDateFilter(p => ({...p, start: e.target.value}))} />
+              <span className="text-slate-300 font-black text-xs">TO</span>
+              <input type="date" className="flex-1 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" value={closingDateFilter.end} onChange={(e) => setClosingDateFilter(p => ({...p, end: e.target.value}))} />
             </div>
           </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-[450px] flex flex-col" ref={priorityChartRef}>
-          <div className="flex justify-between items-center mb-6 shrink-0">
-             <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Performance par Priorité</h3>
-             <button onClick={() => downloadChartAsJpg(priorityChartRef, 'respect_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-5 h-5" /></button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+        <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100 min-h-[380px] sm:h-[450px] flex flex-col min-w-0" ref={priorityChartRef}>
+          <div className="flex justify-between items-center mb-4 sm:mb-6 shrink-0">
+             <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight">Performance par Priorité</h3>
+             <button onClick={() => downloadChartAsJpg(priorityChartRef, 'respect_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-4 h-4 sm:w-5 sm:h-5" /></button>
           </div>
-          <div className="h-[320px] w-full relative">
-            <ResponsiveContainer width="99%" height={320}>
+          <div className="h-[280px] sm:h-[320px] w-full min-h-[260px] min-w-0 relative">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
               <BarChart data={analysis.chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />
@@ -288,13 +288,13 @@ export const TTFAnalysis: React.FC<TTFAnalysisProps> = ({ data, onFilterChange, 
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-[450px] flex flex-col" ref={trendChartRef}>
-           <div className="flex justify-between items-center mb-6 shrink-0">
-              <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Tendance de Résolution</h3>
-              <button onClick={() => downloadChartAsJpg(trendChartRef, 'tendance_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-5 h-5" /></button>
+        <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100 min-h-[380px] sm:h-[450px] flex flex-col min-w-0" ref={trendChartRef}>
+           <div className="flex justify-between items-center mb-4 sm:mb-6 shrink-0">
+              <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight">Tendance de Résolution</h3>
+              <button onClick={() => downloadChartAsJpg(trendChartRef, 'tendance_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-4 h-4 sm:w-5 sm:h-5" /></button>
            </div>
-           <div className="h-[320px] w-full relative">
-              <ResponsiveContainer width="99%" height={320}>
+           <div className="h-[280px] sm:h-[320px] w-full min-h-[260px] min-w-0 relative">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
                  <ComposedChart data={analysis.trendData}>
                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                    <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />
@@ -310,40 +310,40 @@ export const TTFAnalysis: React.FC<TTFAnalysisProps> = ({ data, onFilterChange, 
         </div>
       </div>
 
-      <div className="space-y-6 pb-20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-l-4 border-rose-500 pl-4">
-           <div className="flex items-center gap-3">
-             <AlertCircle className="w-6 h-6 text-rose-500" />
-             <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">🚨 Top 50 - Dossiers Hors Délais</h3>
+      <div className="space-y-4 sm:space-y-6 pb-12 sm:pb-20">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-l-4 border-rose-500 pl-3 sm:pl-4">
+           <div className="flex items-center gap-2 sm:gap-3">
+             <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 shrink-0" />
+             <h3 className="text-base sm:text-lg font-black text-slate-800 uppercase tracking-tighter">🚨 Top 50 - Dossiers Hors Délais</h3>
            </div>
            <button 
              onClick={exportOverdueToExcel}
-             className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-indigo-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-slate-200"
+             className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 bg-slate-900 hover:bg-indigo-700 text-white rounded-lg sm:rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-slate-200"
            >
-             <Download className="w-4 h-4" /> Export List
+             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Export List
            </button>
         </div>
         
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900 text-white text-[11px] font-black uppercase tracking-wider shadow-sm">
-                  <th className="px-6 py-5">Ticket & ID</th>
-                  <th className="px-6 py-5">Localisation Site</th>
-                  <th className="px-6 py-5">Timeline Cycle</th>
-                  <th className="px-6 py-5 text-center">Priorité</th>
-                  <th className="px-6 py-5 text-center">Durée TTF</th>
-                  <th className="px-6 py-5 text-right">Excès SLA</th>
-                  <th className="px-6 py-5"></th>
+                <tr className="bg-slate-900 text-white text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
+                  <th className="px-4 sm:px-6 py-3.5 sm:py-5">Ticket & ID</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5">Localisation Site</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5">Timeline Cycle</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5 text-center">Priorité</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5 text-center">Durée TTF</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5 text-right">Excès SLA</th>
+                  <th className="px-3 sm:px-6 py-3.5 sm:py-5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {analysis.top50Overdue.map((row, idx) => (
                   <tr key={idx} className="hover:bg-rose-50/40 transition-all group">
-                    <td className="px-6 py-5">
+                    <td className="px-4 sm:px-6 py-3.5 sm:py-5">
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-xs font-mono font-black text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200/80 inline-block w-fit">SWO: {row["N° SWO"]}</span>
+                        <span className="text-xs font-mono font-black text-indigo-700 bg-indigo-50 px-2 sm:px-2.5 py-1 rounded-lg border border-indigo-200/80 inline-block w-fit">SWO: {row["N° SWO"]}</span>
                         <div className="flex items-center gap-1.5 bg-slate-100 self-start px-2 py-0.5 rounded-md border border-slate-200">
                           <Hash className="w-3 h-3 text-slate-500" />
                           <span className="text-[10px] font-mono font-black text-slate-700">{row["ID"] || "ID Inconnu"}</span>
