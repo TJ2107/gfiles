@@ -681,9 +681,11 @@ const App: React.FC = () => {
                   </div>
                 )}
 
-                <div className="px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-1">
-                  <span>Tous les Modules</span>
-                </div>
+                {!isSidebarCollapsed && (
+                  <div className="px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-1 transition-opacity duration-200">
+                    <span>Tous les Modules</span>
+                  </div>
+                )}
                 <NavButton id="dashboard" label="Analyses Globales" icon={PieChart} iconBg="from-blue-600 to-indigo-700" />
                 <NavButton id="rapport" label="Rapport d'Activité" icon={BarChart3} colorClass="bg-slate-900 text-indigo-400 border border-slate-800/80" isNew={true} iconBg="from-purple-600 to-pink-600" />
                 <NavButton id="data_pro" label="Data Pro" icon={Layers} isNew={true} iconBg="from-indigo-600 to-blue-700" />
