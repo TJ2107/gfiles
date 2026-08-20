@@ -17,6 +17,8 @@ import {
 } from '../firebase';
 import { clearFirebaseData } from '../firebaseData';
 
+import { UserRole } from '../types';
+
 const getModuleLabel = (moduleKey: string) => {
   switch (moduleKey) {
     case 'portal': return "Portail d'Accueil";
@@ -94,7 +96,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [userList, setUserList] = useState<AuthUser[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [userActionMessage, setUserActionMessage] = useState('');
-  const [pendingApprovalRoles, setPendingApprovalRoles] = useState<Record<string, 'User' | 'Manager' | 'Admin'>>({});
+  const [pendingApprovalRoles, setPendingApprovalRoles] = useState<Record<string, UserRole>>({});
   const [userToConfirm, setUserToConfirm] = useState<{ user: AuthUser; type: 'reject' | 'delete' } | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
 
@@ -185,7 +187,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPass, setNewUserPass] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'User'|'Manager'|'Admin'>('User');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('User');
   const [addUserError, setAddUserError] = useState('');
   const [addUserSuccess, setAddUserSuccess] = useState('');
   const [isSubmittingUser, setIsSubmittingUser] = useState(false);
@@ -239,8 +241,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
   }, [isAdmin]);
 
-  const handleApproveUser = async (user: AuthUser, chosenRole?: 'User' | 'Manager' | 'Admin') => {
-    const roleToAssign = chosenRole || pendingApprovalRoles[user.uid] || user.role || 'User';
+  const handleApproveUser = async (user: AuthUser, chosenRole?: UserRole) => {
+    const roleToAssign = chosenRole || pendingApprovalRoles[user.uid] || (user.role as UserRole) || 'User';
     setUserActionMessage(`Validation de ${user.displayName || user.email}...`);
     try {
       await updateUserStatusAndRole(user.uid, roleToAssign, 'approved', user.email);
@@ -283,7 +285,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
-  const handleUpdateRole = async (user: AuthUser, newRole: 'User' | 'Manager' | 'Admin') => {
+  const handleUpdateRole = async (user: AuthUser, newRole: UserRole) => {
     try {
       await updateUserStatusAndRole(user.uid, newRole, user.status || 'approved', user.email);
       setUserList(prev => prev.map(u => (u.uid === user.uid || (u.email && u.email.toLowerCase() === user.email?.toLowerCase())) ? { ...u, role: newRole } : u));
@@ -1035,12 +1037,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 <select
                                   value={pendingApprovalRoles[pendingUser.uid] || pendingUser.role || 'User'}
                                   onChange={(e) => {
-                                    const r = e.target.value as 'User' | 'Manager' | 'Admin';
+                                    const r = e.target.value as UserRole;
                                     setPendingApprovalRoles(prev => ({ ...prev, [pendingUser.uid]: r }));
                                   }}
                                   className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:border-indigo-500"
                                 >
-                                  <option value="User">Utilisateur (Lecteur)</option>
+                                  <option value="User">Utilisateur (Lecteur - Terrain)</option>
+                                  <option value="FE">Field Engineer (FE - Terrain)</option>
                                   <option value="Manager">Manager (Superviseur)</option>
                                   <option value="Admin">Administrateur</option>
                                 </select>
@@ -1109,20 +1112,20 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       Rôles disponibles & Privilèges
                     </h4>
                     
-                    <div className="space-y-4 text-[11px] leading-relaxed">
+                    <div className="space-y-3.5 text-[11px] leading-relaxed">
                       <div className="border-l-2 border-slate-300 dark:border-slate-700 pl-3">
-                        <span className="font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wide">Utilisateur (Lecteur)</span>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1">Accède en lecture seule aux analyses globales, modules prédictifs, batteries et courroies.</p>
+                        <span className="font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wide">Utilisateur & FE (Terrain)</span>
+                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Accès ciblé aux modules Daily Status, Parc Batteries, Audit Courroies et Guide d'Utilisation.</p>
                       </div>
                       
                       <div className="border-l-2 border-teal-500 dark:border-teal-400 pl-3">
                         <span className="font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide">Manager (Superviseur)</span>
-                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Autorise l'importation de fichiers XLS/CSV, la mise en cache des alertes locales et l'édition manuelle de la base.</p>
+                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Accès à tous les modules d'analyse, prédictions et rapports (hors module d'importation Excel).</p>
                       </div>
 
                       <div className="border-l-2 border-indigo-600 pl-3">
                         <span className="font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">Administrateur</span>
-                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Privilèges totaux incluant la validation d'inscriptions, la gestion d'équipe et la purge des données.</p>
+                        <p className="text-slate-500 dark:text-slate-400 mt-0.5">Privilèges complets : Importation Excel, validation des accès, gestion des utilisateurs et configuration système.</p>
                       </div>
                     </div>
                   </div>
@@ -1206,10 +1209,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Rôle d'Accès</label>
                             <select 
                               value={newUserRole}
-                              onChange={(e) => setNewUserRole(e.target.value as 'User' | 'Manager' | 'Admin')}
+                              onChange={(e) => setNewUserRole(e.target.value as UserRole)}
                               className="w-full px-3 py-2 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 text-xs rounded-lg focus:outline-none focus:border-indigo-500"
                             >
-                              <option value="User">Utilisateur (Lecture)</option>
+                              <option value="User">Utilisateur (Lecteur - Terrain)</option>
+                              <option value="FE">Field Engineer (FE - Terrain)</option>
                               <option value="Manager">Manager (Superviseur)</option>
                               <option value="Admin">Administrateur (Complet)</option>
                             </select>
@@ -1285,7 +1289,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     ) : (
                                       <select
                                         value={user.role || 'User'}
-                                        onChange={(e) => handleUpdateRole(user, e.target.value as 'User' | 'Manager' | 'Admin')}
+                                        onChange={(e) => handleUpdateRole(user, e.target.value as UserRole)}
                                         className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:border-indigo-500"
                                       >
                                         <option value="User">Utilisateur (Lecteur)</option>

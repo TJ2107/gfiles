@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { DatabaseStatusIndicators } from './DatabaseStatusIndicators';
 import { GFLogo } from './GFLogo';
+import { isAllowedModule, UserRole } from '../types';
 
 interface MobilePortalProps {
   role: string | null;
@@ -167,6 +168,17 @@ const MODULES: ModuleItem[] = [
     minRole: 'User'
   },
   {
+    id: 'guide',
+    label: "Guide d'Utilisation",
+    description: "Documentation complète sur l'application, les rôles et le fonctionnement des modules.",
+    icon: HelpCircle,
+    colorClass: 'text-sky-500 bg-sky-500/10',
+    bgClass: 'from-sky-50/50 to-white dark:from-sky-950/20 dark:to-slate-900',
+    borderClass: 'border-sky-100 dark:border-sky-900/50',
+    category: 'systeme',
+    minRole: 'User'
+  },
+  {
     id: 'settings',
     label: 'Paramètres',
     description: "Seuils d'alerte de maintenance et préférences du système.",
@@ -184,22 +196,23 @@ export const MobilePortal: React.FC<MobilePortalProps> = (props) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
 
-  const userRole = role || 'User';
+  const userRole = (role as UserRole) || 'User';
   const isAdmin = userRole === 'Admin';
-  const isManager = userRole === 'Manager' || userRole === 'Admin';
+  const isManager = userRole === 'Manager';
+  const isFE = userRole === 'FE';
 
   const roleLabel = useMemo(() => {
     if (isAdmin) return { label: 'Administrateur', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
     if (isManager) return { label: 'Manager', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
-    return { label: 'Lecteur / Consultant', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
-  }, [isAdmin, isManager]);
+    if (isFE) return { label: 'Field Engineer (FE)', color: 'text-sky-500 bg-sky-500/10 border-sky-500/20' };
+    return { label: 'Utilisateur', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+  }, [isAdmin, isManager, isFE]);
 
   // Filter modules based on user role and query
   const filteredModules = useMemo(() => {
     return MODULES.filter(mod => {
-      // Role check
-      if (mod.minRole === 'Admin' && !isAdmin) return false;
-      if (mod.minRole === 'Manager' && !isManager) return false;
+      // Role check using centralized RBAC
+      if (!isAllowedModule(userRole, mod.id)) return false;
 
       // Category check
       if (selectedCategory !== 'all' && mod.category !== selectedCategory) return false;
@@ -212,7 +225,7 @@ export const MobilePortal: React.FC<MobilePortalProps> = (props) => {
 
       return true;
     });
-  }, [isAdmin, isManager, selectedCategory, searchQuery]);
+  }, [userRole, selectedCategory, searchQuery]);
 
   const categories: { id: CategoryType; label: string }[] = [
     { id: 'all', label: 'Tous' },

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, LocalUser } from '../firebase';
+import { UserRole } from '../types';
 
 interface AuthContextType {
   user: LocalUser | null;
-  role: 'User' | 'Manager' | 'Admin' | null;
+  role: UserRole | null;
   loading: boolean;
 }
 
@@ -11,14 +12,14 @@ const AuthContext = createContext<AuthContextType>({ user: null, role: null, loa
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<LocalUser | null>(null);
-  const [role, setRole] = useState<'User' | 'Manager' | 'Admin' | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(null, (currentUser: LocalUser | null) => {
       setUser(currentUser);
       if (currentUser) {
-        setRole(currentUser.role || 'User');
+        setRole((currentUser.role as UserRole) || 'User');
       } else {
         setRole(null);
       }

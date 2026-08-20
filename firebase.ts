@@ -198,7 +198,9 @@ export const onAuthStateChanged = (authObj: unknown, callback: (user: AuthUser |
   };
 };
 
-export const registerUserWithoutLoggingIn = async (email: string, _pass: string, name: string, role: 'User' | 'Manager' | 'Admin' = 'User', status: 'pending' | 'approved' = 'pending') => {
+import { UserRole } from './types';
+
+export const registerUserWithoutLoggingIn = async (email: string, _pass: string, name: string, role: UserRole = 'User', status: 'pending' | 'approved' = 'pending') => {
   const uid = email.replace(/[^a-zA-Z0-9]/g, '_');
   const isSuperAdmin = email.toLowerCase() === 'cyber.kan587@gmail.com';
   const effectiveStatus = isSuperAdmin ? 'approved' : status;

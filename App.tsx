@@ -19,19 +19,22 @@ import { MigrationAssistant } from './components/MigrationAssistant';
 import { MobilePortal } from './components/MobilePortal';
 import { CopilotIA } from './components/CopilotIA';
 import { GMAOStockTracker } from './components/GMAOStockTracker';
+import { UserGuide } from './components/UserGuide';
 import { DataUpdateNotification, DataUpdateStats } from './components/DataUpdateNotification';
 import { CommandPalette } from './components/CommandPalette';
 import { ExecutiveBriefModal } from './components/ExecutiveBriefModal';
 import { DatabaseStatusIndicators } from './components/DatabaseStatusIndicators';
 import { computeDataDiffStats } from './utils/dataDiff';
 import { GFLogo } from './components/GFLogo';
+import { isAllowedModule, UserRole } from './types';
 import { 
   Layout, Database, PieChart, Calendar, Timer, 
   Briefcase, Battery, Settings2, Loader2, Layers, 
   Download, Settings, Menu, X, ChevronRight, ClipboardList,
   PanelLeftClose, PanelLeftOpen,
   Bell, ArrowRight, ShieldAlert, LogOut, BarChart3,
-  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, Star, Package
+  ArrowLeft, CheckCircle2, Wrench, Sparkles, Command, Star, Package,
+  HelpCircle
 } from 'lucide-react';
 
 import { parseDate } from './utils/dateHelpers';
@@ -106,6 +109,7 @@ const App: React.FC = () => {
       case 'belt': return { label: 'Audit Courroies', icon: Settings2, iconBg: 'from-slate-600 to-slate-800' };
       case 'gmao': return { label: 'Stock & GMAO', icon: Package, iconBg: 'from-amber-600 to-amber-700' };
       case 'export': return { label: "Pôle d'Exportation", icon: Download, iconBg: 'from-sky-500 to-indigo-600' };
+      case 'guide': return { label: "Guide d'Utilisation", icon: HelpCircle, iconBg: 'from-sky-500 to-blue-600' };
       default: return null;
     }
   };
@@ -224,9 +228,18 @@ const App: React.FC = () => {
   // Reset portal tab to dashboard on PC/Desktop format
   useEffect(() => {
     if (!isMobileOrTablet && activeTab === 'portal') {
-      setActiveTab('dashboard');
+      setActiveTab(isAllowedModule(role, 'dashboard') ? 'dashboard' : 'daily');
     }
-  }, [isMobileOrTablet, activeTab]);
+  }, [isMobileOrTablet, activeTab, role]);
+
+  // Enforce role-based module access redirection
+  useEffect(() => {
+    if (!isLoading && role) {
+      if (!isAllowedModule(role, activeTab)) {
+        setActiveTab(isMobileOrTablet ? 'portal' : 'daily');
+      }
+    }
+  }, [role, activeTab, isLoading, isMobileOrTablet]);
 
   // State for alert thresholds
   const [batteryThreshold, setBatteryThreshold] = useState<number>(7);
@@ -488,6 +501,9 @@ const App: React.FC = () => {
   };
 
   const NavButton = ({ id, label, icon: Icon, colorClass, isNew, iconBg }: { id: string, label: string, icon: React.ElementType, colorClass?: string, isNew?: boolean, iconBg?: string }) => {
+    if (!isAllowedModule(role, id)) {
+      return null;
+    }
     const isActive = activeTab === id;
     const isFavorite = favoriteModules.includes(id);
     return (
@@ -698,6 +714,7 @@ const App: React.FC = () => {
                 <NavButton id="gmao" label="Stock & GMAO" icon={Package} isNew={true} iconBg="from-amber-600 to-amber-700" />
                 <div className="h-px bg-slate-900/80 my-3 mx-2"></div>
                 <NavButton id="export" label="Pôle d'Exportation" icon={Download} iconBg="from-sky-500 to-indigo-600" />
+                <NavButton id="guide" label="Guide d'Utilisation" icon={HelpCircle} iconBg="from-sky-500 to-blue-600" />
                 <NavButton id="settings" label="Paramètres du Système" icon={Settings} colorClass="bg-red-500/10 text-red-300 border border-red-950" iconBg="from-red-600 to-rose-800" />
               </>
             )}
@@ -985,6 +1002,7 @@ const App: React.FC = () => {
                     {activeTab === 'belt' && <div className="overflow-auto h-full"><BeltTracker data={data} thresholdDays={beltThreshold} /></div>}
                     {activeTab === 'gmao' && <div className="overflow-auto h-full p-4 sm:p-6"><GMAOStockTracker data={data} /></div>}
                     {activeTab === 'export' && <div className="overflow-auto h-full"><ExportManager allData={data} filteredData={filteredData} onImport={(data) => handleDataLoaded(data, false)} isAdmin={isAdmin} /></div>}
+                    {activeTab === 'guide' && <div className="overflow-auto h-full"><UserGuide userRole={role} onSelectTab={setActiveTab} /></div>}
                     {activeTab === 'settings' && (
                       <div className="overflow-y-auto h-full custom-scrollbar">
                         <SettingsPanel 

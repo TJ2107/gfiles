@@ -78,3 +78,24 @@ export enum SWOState {
   CLOSED = "CLOSED",
   OPEN = "OPEN"
 }
+
+export type UserRole = 'User' | 'FE' | 'Manager' | 'Admin';
+
+export const isAllowedModule = (role: string | null | undefined, moduleId: string): boolean => {
+  const userRole = (role as UserRole) || 'User';
+  if (userRole === 'Admin') return true;
+
+  // Import Excel is strictly Admin only
+  if (moduleId === 'upload') return false;
+
+  // Manager has access to all modules except upload
+  if (userRole === 'Manager') return true;
+
+  // FE and User roles only have access to daily status, parc batteries, audit courroies, guide (and portal)
+  if (userRole === 'FE' || userRole === 'User') {
+    return ['daily', 'battery', 'belt', 'guide', 'portal'].includes(moduleId);
+  }
+
+  return false;
+};
+

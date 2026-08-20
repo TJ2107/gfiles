@@ -672,21 +672,21 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-xs">
               <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1">
                 <p className="font-black text-indigo-300 uppercase text-[11px]">1. Équilibre des Flux</p>
-                <p className="text-slate-200 leading-relaxed">
+                <p className="text-slate-200 leading-relaxed text-justify">
                   <span className="font-extrabold text-white">{stats.totals.totalCreatedInPeriod} SWO</span> créés face à <span className="font-extrabold text-white">{stats.totals.totalClosedInPeriod} SWO</span> fermés (taux d'absorption global de <span className="font-bold text-emerald-400">{stats.closureRatio}%</span>). {stats.totals.totalClosedInPeriod >= stats.totals.totalCreatedInPeriod ? 'L\'équipe parvient à réduire la charge globale.' : 'Le rythme des entrées exige un suivi renforcé des fermetures.'}
                 </p>
               </div>
 
               <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1">
                 <p className="font-black text-emerald-300 uppercase text-[11px]">2. Efficacité Directe</p>
-                <p className="text-slate-200 leading-relaxed">
+                <p className="text-slate-200 leading-relaxed text-justify">
                   <span className="font-extrabold text-white">{stats.totals.createdAndClosedInPeriod} SWO</span> (<span className="font-bold text-emerald-400">{stats.directResolutionRate}%</span> des créations) ont été traités et fermés sur le mois même de leur ouverture.
                 </p>
               </div>
 
               <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1">
                 <p className="font-black text-purple-300 uppercase text-[11px]">3. Traitement du Backlog</p>
-                <p className="text-slate-200 leading-relaxed">
+                <p className="text-slate-200 leading-relaxed text-justify">
                   Résorption de <span className="font-extrabold text-white">{stats.totals.backlogResolvedInPeriod} anciens SWO</span> hors période. Le stock d'en-cours créé sur la période s'établit à <span className="font-bold text-amber-400">{stats.totals.remainingFromPeriod} SWO</span>.
                 </p>
               </div>
@@ -768,7 +768,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                   <span>Note de Projection : Équilibre des Volumes</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs text-justify">
                   <strong>{stats.totals.totalCreatedInPeriod}</strong> entrées enregistrées vs <strong>{stats.totals.totalClosedInPeriod}</strong> fermetures totales. {stats.totals.totalClosedInPeriod >= stats.totals.totalCreatedInPeriod ? 'La capacité d\'extinction surpasse les entrées (dépollution positive du stock).' : 'Le volume de SWO entrants dépasse le rythme de clôture immédiate (vigilance requise).'}
                 </p>
               </div>
@@ -815,7 +815,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>Note de Projection : Ventilation de la Production</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs text-justify">
                   <strong>{stats.totals.createdAndClosedInPeriod}</strong> SWO clos directement le mois même, <strong>{stats.totals.backlogResolvedInPeriod}</strong> anciens SWO dépollués, laissant <strong>{stats.totals.remainingFromPeriod}</strong> SWO en suspens sur la période.
                 </p>
               </div>
@@ -882,7 +882,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                   <span>Note de Projection : Analyse des Blocages</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs text-justify">
                   Motif principal de rétention : <strong>{stats.pendingXData[0]?.name || 'Non renseigné'}</strong> avec <strong>{stats.pendingXData[0]?.value || 0} SWO</strong> ({stats.totals.remainingFromPeriod > 0 ? Math.round(((stats.pendingXData[0]?.value || 0) / stats.totals.remainingFromPeriod) * 100) : 0}% des SWO). Action prioritaire recommandée pour débloquer les traitements.
                 </p>
               </div>
@@ -965,7 +965,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Note de Projection : Répartition Géographique</span>
                 </div>
-                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs">
+                <p className="text-slate-700 leading-snug font-medium text-[11px] sm:text-xs text-justify">
                   Secteur à plus forte concentration : <strong>{stats.regionStats[0]?.name || 'Inconnue'}</strong> avec <strong>{stats.regionStats[0]?.count || 0} SWO</strong> ({stats.totals.remainingFromPeriod > 0 ? Math.round(((stats.regionStats[0]?.count || 0) / stats.totals.remainingFromPeriod) * 100) : 0}% de l'en-cours résiduel). Zone d'intervention prioritaire pour les opérations.
                 </p>
               </div>
@@ -1005,7 +1005,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   Période : {period.start} au {period.end}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-slate-200">
+              <p className="text-xs sm:text-sm font-medium text-slate-200 text-justify">
                 Catégorisation rigoureuse sur la période sélectionnée basée sur l'analyse sémantique des descriptions d'incidents déclarés dans les SWO.
               </p>
             </div>
@@ -1060,7 +1060,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                       <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
                       <span>Problème Identifié :</span>
                     </div>
-                    <p className="text-xs text-slate-800 leading-relaxed font-semibold">
+                    <p className="text-xs text-slate-800 leading-relaxed font-semibold text-justify">
                       {item.problem}
                     </p>
                   </div>
@@ -1071,7 +1071,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>Solution & Plan d'Action :</span>
                     </div>
-                    <p className="text-xs text-slate-800 leading-relaxed font-semibold">
+                    <p className="text-xs text-slate-800 leading-relaxed font-semibold text-justify">
                       {item.solution}
                     </p>
                   </div>
@@ -1133,7 +1133,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                   Période : {period.start} au {period.end}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-slate-200">
+              <p className="text-xs sm:text-sm font-medium text-slate-200 text-justify">
                 Suivi des interventions de correction de fonctionnement des groupes électrogènes, systèmes hybrides, remplacement des batteries backup Leoch et investissements structurants clos sur la période.
               </p>
             </div>
@@ -1175,7 +1175,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </div>
               </div>
               <div className="p-3 sm:p-4 rounded-xl border bg-red-50/80 border-red-200 text-slate-800 space-y-1">
-                <p className="text-xs font-semibold leading-relaxed">
+                <p className="text-xs font-semibold leading-relaxed text-justify">
                   Interventions lourdes de remise en état des groupes électrogènes (révision moteur, remplacement d'alternateur, injecteurs, pompes et correction des défauts majeurs de génération).
                 </p>
               </div>
@@ -1214,7 +1214,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </div>
               </div>
               <div className="p-3 sm:p-4 rounded-xl border bg-blue-50/80 border-blue-200 text-slate-800 space-y-1">
-                <p className="text-xs font-semibold leading-relaxed">
+                <p className="text-xs font-semibold leading-relaxed text-justify">
                   Optimisation et maintenance des systèmes hybrides et parcs solaires PV pour réduire la consommation de carburant et fiabiliser la production autonome des sites.
                 </p>
               </div>
@@ -1253,7 +1253,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </div>
               </div>
               <div className="p-3 sm:p-4 rounded-xl border bg-purple-50/80 border-purple-200 text-slate-800 space-y-1">
-                <p className="text-xs font-semibold leading-relaxed">
+                <p className="text-xs font-semibold leading-relaxed text-justify">
                   Remplacement planifié ou d'urgence des parcs de batteries de backup (notamment de marque Leoch et autres) pour garantir l'autonomie critique DC lors des coupures secteur.
                 </p>
               </div>
@@ -1292,7 +1292,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                 </div>
               </div>
               <div className="p-3 sm:p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-slate-800 space-y-1">
-                <p className="text-xs font-semibold leading-relaxed">
+                <p className="text-xs font-semibold leading-relaxed text-justify">
                   Autres travaux de modernisation et de mise aux normes structurelles (redresseurs principaux, inverseurs ATS lourds, onduleurs et équipements énergie).
                 </p>
               </div>
@@ -1353,7 +1353,7 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                           </div>
                           <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white mb-1 group-hover:text-indigo-600 transition-colors uppercase truncate">{row["Nom du site"]}</h4>
                           <p className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase mb-2 sm:mb-3 flex items-center gap-1.5"><MapPin className="w-3 h-3 text-indigo-500 shrink-0" /> {row["Region"]}</p>
-                          <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-2.5 sm:p-3 rounded-xl mb-3 sm:mb-4 italic line-clamp-2 leading-relaxed border border-slate-100 dark:border-slate-800">
+                          <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-2.5 sm:p-3 rounded-xl mb-3 sm:mb-4 italic line-clamp-2 leading-relaxed border border-slate-100 dark:border-slate-800 text-justify">
                              {row["Description"] || row["Short description"] || "Pas de description."}
                           </div>
                        </div>

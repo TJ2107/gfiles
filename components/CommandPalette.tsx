@@ -5,7 +5,8 @@ import {
   Briefcase, Battery, Settings2, FileText, MapPin, 
   Sparkles, ArrowRight, X, Command, Sliders
 } from 'lucide-react';
-import { GlobalFileRow } from '../types';
+import { GlobalFileRow, isAllowedModule, UserRole } from '../types';
+import { useAuth } from './AuthProvider';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { id: 'tas', label: 'Analyse TAS', icon: Sliders, desc: 'Tickets & catégories TAS' },
   { id: 'battery', label: 'Suivi Batteries', icon: Battery, desc: 'Remplacement & santé batteries' },
   { id: 'belt', label: 'Suivi Courroies', icon: Briefcase, desc: 'Maintenance courroies' },
+  { id: 'guide', label: 'Guide d\'Utilisation', icon: FileText, desc: 'Documentation & rôles de l\'application' },
   { id: 'rapport', label: 'Rapport d\'Activité Consolidé', icon: FileText, desc: 'Exportation de rapports consolidés' },
   { id: 'settings', label: 'Paramètres', icon: Settings2, desc: 'Configuration système & utilisateurs' },
 ];
@@ -35,6 +37,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   data,
   onSelectSWO
 }) => {
+  const { role } = useAuth();
+  const userRole = (role as UserRole) || 'User';
   const [query, setQuery] = useState('');
 
   // Handle Ctrl+K / Cmd+K keyboard shortcut
@@ -63,14 +67,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     if (isOpen) setQuery('');
   }, [isOpen]);
 
-  // Filtered Nav Items
+  // Filtered Nav Items based on Role and Query
   const filteredNav = useMemo(() => {
-    if (!query.trim()) return NAV_ITEMS;
+    const allowed = NAV_ITEMS.filter(item => isAllowedModule(userRole, item.id));
+    if (!query.trim()) return allowed;
     const q = query.toLowerCase();
-    return NAV_ITEMS.filter(item => 
+    return allowed.filter(item => 
       item.label.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, userRole]);
 
   // Filtered Records (SWO, Site, Intervenant)
   const filteredRecords = useMemo(() => {
