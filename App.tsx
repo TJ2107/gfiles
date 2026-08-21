@@ -26,7 +26,7 @@ import { ExecutiveBriefModal } from './components/ExecutiveBriefModal';
 import { DatabaseStatusIndicators } from './components/DatabaseStatusIndicators';
 import { computeDataDiffStats } from './utils/dataDiff';
 import { GFLogo } from './components/GFLogo';
-import { isAllowedModule, UserRole } from './types';
+import { isAllowedModule } from './types';
 import { 
   Layout, Database, PieChart, Calendar, Timer, 
   Briefcase, Battery, Settings2, Loader2, Layers, 
@@ -439,15 +439,15 @@ const App: React.FC = () => {
     setDbQuotaError(false);
     try {
       const stats = computeDataDiffStats(data, newData, append);
-      console.log(`Starting Firebase save process. Total rows: ${newData.length}, Append: ${append}`);
-      await saveToFirebase(newData, append);
+      console.log(`Starting Firebase/Relay save process. Total rows: ${newData.length}, Append: ${append}`);
+      const savedRows = await saveToFirebase(newData, append);
       
-      console.log('Firebase chunks saved. Re-fetching data...');
-      
-      const dbData = await fetchFromFirebase();
-      console.log(`Data re-fetched from Firebase. Total rows: ${dbData.length}`);
-      
-      setData(dbData);
+      if (Array.isArray(savedRows) && savedRows.length > 0) {
+        setData(savedRows);
+      } else {
+        const dbData = await fetchFromFirebase();
+        setData(dbData);
+      }
       broadcastDataUpdate(stats);
     } catch (error) {
       console.error('CRITICAL: Error saving data:', error);
@@ -470,7 +470,10 @@ const App: React.FC = () => {
     setDbQuotaError(false);
     try {
       const stats = computeDataDiffStats(data, data, false);
-      await saveToFirebase(data, false);
+      const savedRows = await saveToFirebase(data, false);
+      if (Array.isArray(savedRows) && savedRows.length > 0) {
+        setData(savedRows);
+      }
       broadcastDataUpdate(stats);
     } catch (error) {
       console.error('Error updating database:', error);

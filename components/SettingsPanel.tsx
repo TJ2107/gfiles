@@ -100,16 +100,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [userToConfirm, setUserToConfirm] = useState<{ user: AuthUser; type: 'reject' | 'delete' } | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
 
-  // Cloudflare D1 status & bypass states
+  // Cloudflare D1 status & health states
   const [d1Status, setD1Status] = useState<'checking' | 'online' | 'offline'>('checking');
   const [isCloudflareRemote, setIsCloudflareRemote] = useState<boolean>(false);
   const [cfErrorMessage, setCfErrorMessage] = useState<string>('');
-  const [forceD1Active, setForceD1Active] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('force_d1_active') === 'true';
-    }
-    return false;
-  });
 
   // Check Cloudflare D1 & Health
   useEffect(() => {
@@ -140,17 +134,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     checkD1Health();
   }, []);
 
-  const handleToggleForceD1 = () => {
-    const newValue = !forceD1Active;
-    setForceD1Active(newValue);
-    if (newValue) {
-      localStorage.setItem('force_d1_active', 'true');
-    } else {
-      localStorage.removeItem('force_d1_active');
-    }
-    setShowSaveMessage(true);
-  };
-
   const handleResetToFirebase = async () => {
     try {
       const { resetQuotaOverride } = await import('../firebaseData');
@@ -159,7 +142,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       resetQuotaStatus();
     } catch {}
     localStorage.removeItem('force_d1_active');
-    setForceD1Active(false);
     setShowSaveMessage(true);
     setTimeout(() => {
       window.location.reload();
@@ -808,39 +790,39 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <Database className="w-5 h-5 text-indigo-500" />
+                          <Database className="w-5 h-5 text-sky-500" />
                           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
-                            Architecture Double Base : Firestore + Cloudflare D1
+                            Architecture Double Base : Cloudflare D1 (Principale) + Firestore (Secondaire)
                           </h4>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
-                          Surveillez l'état de synchronisation en direct. Le basculement automatique est actif : si Firebase sature son quota, vos données basculent sans coupure sur Cloudflare D1.
+                          <strong>Cloudflare D1</strong> est configurée comme votre base de données principale prioritaire. <strong>Firebase Firestore</strong> opère en tant que base secondaire pour la réplication et la redondance multi-niveaux.
                         </p>
                       </div>
 
                       {/* Dual DB Badges */}
                       <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
-                        {/* Firestore Badge */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                          <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider">Firestore : En direct</span>
-                        </div>
-
-                        {/* Cloudflare Badge */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-slate-50 dark:bg-slate-950 border-slate-200/65 dark:border-slate-800">
+                        {/* Cloudflare Badge (Primary) */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400">
                           {isCloudflareRemote ? (
                             <>
-                              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Cloudflare D1 : Distant</span>
+                              <span className="flex h-1.5 w-1.5 rounded-full bg-sky-500 animate-ping"></span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider">Cloudflare D1 : Principale</span>
                             </>
                           ) : (
                             <>
-                              <span className={`flex h-1.5 w-1.5 rounded-full ${d1Status === 'online' ? 'bg-indigo-500' : 'bg-amber-500'}`}></span>
-                              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                                {d1Status === 'online' ? 'D1 : Relais Local Actif' : 'D1 : Initialisation...'}
+                              <span className={`flex h-1.5 w-1.5 rounded-full ${d1Status === 'online' ? 'bg-sky-500' : 'bg-amber-500'}`}></span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider">
+                                {d1Status === 'online' ? 'Cloudflare D1 : Principale' : 'D1 : Initialisation...'}
                               </span>
                             </>
                           )}
+                        </div>
+
+                        {/* Firestore Badge (Secondary) */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-slate-50 dark:bg-slate-950 border-slate-200/65 dark:border-slate-800">
+                          <span className="flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Firestore : Réplication</span>
                         </div>
                       </div>
                     </div>
@@ -852,41 +834,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       </div>
                     )}
 
-                    {/* Toggle Switch */}
+                    {/* Info bar */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-0.5">
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Activation Forcée de Cloudflare D1
+                          Hiérarchie & Priorité des Requêtes
                         </span>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
-                          En mode automatique (par défaut), Firebase Firestore est utilisé pour synchroniser en temps réel tous les appareils. Si le quota quotidien est atteint, le basculement sur Cloudflare D1 est instantané et automatique.
+                          Toutes les lectures et écritures s'exécutent en priorité absolue sur Cloudflare D1. Firestore reçoit une copie répliquée en tâche de fond pour garantir la redondance et la sécurité de vos données.
                         </p>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
                         <button
                           onClick={handleResetToFirebase}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition active:scale-95 shadow-sm"
-                          title="Réinitialise tout blocage de quota et réactive la synchronisation Firebase multi-appareils"
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] rounded-lg transition active:scale-95 shadow-sm"
+                          title="Réinitialiser l'état des connexions et vérifier la synchronisation"
                         >
-                          Rétablir Firebase (Multi-appareils)
-                        </button>
-                        
-                        {/* Premium Toggle Switch Button */}
-                        <button
-                          onClick={handleToggleForceD1}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            forceD1Active ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-800'
-                          }`}
-                          role="switch"
-                          aria-checked={forceD1Active}
-                          type="button"
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              forceD1Active ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
+                          Synchroniser / Réinitialiser
                         </button>
                       </div>
                     </div>

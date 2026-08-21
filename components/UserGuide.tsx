@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { 
   BookOpen, ShieldCheck, Database, PieChart, BarChart3, Layers, 
   Calendar, Timer, Briefcase, ClipboardList, Battery, Settings2, 
-  Package, Download, Settings, Search, User, UserCheck, Key, 
-  HelpCircle, CheckCircle2, FileSpreadsheet, Sparkles, AlertTriangle, ArrowRight,
+  Package, Download, Settings, Search,
+  HelpCircle, CheckCircle2, Sparkles, ArrowRight,
   Info, Cpu, Lightbulb
 } from 'lucide-react';
 

@@ -750,24 +750,6 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
         const { id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments } = item;
         const recordId = id || 'raw-' + Math.random().toString(36).substring(2, 9);
         
-        await queryCloudflareD1(`
-          INSERT INTO daily_raw_data (id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments, imported_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET
-            site_code=excluded.site_code,
-            pm_number=excluded.pm_number,
-            site_name=excluded.site_name,
-            region=excluded.region,
-            planned_date=excluded.planned_date,
-            maintenance_type=excluded.maintenance_type,
-            technician_name=excluded.technician_name,
-            executed_date=excluded.executed_date,
-            reprogrammed_date=excluded.reprogrammed_date,
-            status=excluded.status,
-            comments=excluded.comments,
-            imported_at=excluded.imported_at
-        `, [recordId, site_code || '', pm_number || '', site_name || '', region || '', planned_date || '', maintenance_type || '', technician_name || '', executed_date || '', reprogrammed_date || '', status || 'Planifié', comments || '', new Date().toISOString()]);
-
         const existingIndex = db.daily_raw_data.findIndex((p: any) => p.pm_number === pm_number || p.id === recordId);
         if (existingIndex > -1) {
           db.daily_raw_data[existingIndex] = {
@@ -804,7 +786,37 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
       }
       
       writeMockDb(db);
-      res.json({ success: true, message: "Données brutes journalières synchronisées avec succès." });
+      res.json({ success: true, count: items.length, message: "Données brutes journalières synchronisées avec succès." });
+
+      // Background async sync to remote Cloudflare D1 if configured
+      (async () => {
+        const config = getCloudflareD1Config();
+        if (!config || cfAuthFailed) return;
+        const topItems = items.slice(0, 50);
+        for (const item of topItems) {
+          const { id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments } = item;
+          const recordId = id || 'raw-' + Math.random().toString(36).substring(2, 9);
+          await queryCloudflareD1(`
+            INSERT INTO daily_raw_data (id, site_code, pm_number, site_name, region, planned_date, maintenance_type, technician_name, executed_date, reprogrammed_date, status, comments, imported_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              site_code=excluded.site_code,
+              pm_number=excluded.pm_number,
+              site_name=excluded.site_name,
+              region=excluded.region,
+              planned_date=excluded.planned_date,
+              maintenance_type=excluded.maintenance_type,
+              technician_name=excluded.technician_name,
+              executed_date=excluded.executed_date,
+              reprogrammed_date=excluded.reprogrammed_date,
+              status=excluded.status,
+              comments=excluded.comments,
+              imported_at=excluded.imported_at
+          `, [recordId, site_code || '', pm_number || '', site_name || '', region || '', planned_date || '', maintenance_type || '', technician_name || '', executed_date || '', reprogrammed_date || '', status || 'Planifié', comments || '', new Date().toISOString()]);
+        }
+      })().catch(err => {
+        console.warn('Background daily_raw_data sync to Cloudflare D1 notice:', err?.message || err);
+      });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -857,18 +869,36 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
   // H. GET /api/d1/global-files
   app.get('/api/d1/global-files', async (req, res) => {
     try {
+      const db = readMockDb();
+      let results = db.global_files || [];
+
+      // 1. If local relay has user-updated files, return them immediately
+      if (results.length > 0) {
+        const rows = results.map((r: any) => {
+          try { 
+            return typeof r.raw_json === 'string' ? JSON.parse(r.raw_json) : (r.data || r); 
+          } catch { 
+            return null; 
+          }
+        }).filter((r: any) => r !== null);
+        return res.json({ success: true, rows, source: 'Local Relay' });
+      }
+
+      // 2. If local relay is empty, check remote Cloudflare D1
       const cfRows = await queryCloudflareD1('SELECT * FROM global_files LIMIT 10000');
       if (cfRows && cfRows.length > 0) {
         const rows = cfRows.map((r: any) => {
-          try { return JSON.parse(r.raw_json); } catch { return null; }
+          try { 
+            return typeof r.raw_json === 'string' ? JSON.parse(r.raw_json) : (r.data || r); 
+          } catch { 
+            return null; 
+          }
         }).filter((r: any) => r !== null);
         return res.json({ success: true, rows, source: 'Cloudflare D1' });
       }
 
-      const db = readMockDb();
-      let results = db.global_files || [];
-      
-      if (results.length === 0 && db.pm_assignments && db.pm_assignments.length > 0) {
+      // 3. Fallback to pm_assignments
+      if (db.pm_assignments && db.pm_assignments.length > 0) {
         results = db.pm_assignments.map((row: any) => ({
           id: row.id,
           swo_number: row.site_code || row.id,
@@ -914,11 +944,19 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
       }));
       
       writeMockDb(db);
+      res.json({ success: true, count: items.length });
 
-      // Async batch persist to Cloudflare D1 if configured (first 500 rows to prevent payload overflow)
-      const config = getCloudflareD1Config();
-      if (config) {
-        const topItems = items.slice(0, 500);
+      // Background async persist to Cloudflare D1 if configured
+      (async () => {
+        const config = getCloudflareD1Config();
+        if (!config || cfAuthFailed) return;
+        
+        if (items.length === 0) {
+          await queryCloudflareD1('DELETE FROM global_files');
+          return;
+        }
+
+        const topItems = items.slice(0, 100);
         for (const it of topItems) {
           const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
           await queryCloudflareD1(`
@@ -926,9 +964,9 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
             VALUES (?, ?, ?, ?, ?)
           `, [rowId, it["N° SWO"] || '', it["PM number"] || '', JSON.stringify(it), new Date().toISOString()]);
         }
-      }
-
-      res.json({ success: true });
+      })().catch(err => {
+        console.warn('Background global_files sync to Cloudflare D1 notice:', err?.message || err);
+      });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }

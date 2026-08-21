@@ -87,34 +87,12 @@ export const DatabaseStatusIndicators: React.FC<DatabaseStatusIndicatorsProps> =
         className={`flex items-center justify-center gap-2.5 ${
           isCompact ? 'px-2 py-1 rounded-lg' : 'px-3 py-1.5 rounded-xl'
         } bg-slate-900/90 hover:bg-slate-850 border border-slate-800/90 transition-all duration-200 cursor-pointer shadow-xs select-none group`}
-        title="Statut de connectivité : Rouge (Firestore) / Bleu (Cloudflare D1)"
+        title="Bases de données : Bleu (Cloudflare D1 - Principale) / Rouge (Firestore - Secondaire)"
       >
-        {/* Voyant 1 : Firestore (Rouge / Orange / Actif) */}
+        {/* Voyant 1 : Cloudflare D1 (Bleu / Base Principale) */}
         <div 
           className="flex items-center justify-center relative p-0.5" 
-          title={firestoreStatus === 'connected' ? 'Firestore : Connecté' : 'Firestore : Quota Dépassé (Relais Actif)'}
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span 
-              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                firestoreStatus === 'connected' ? 'bg-red-400' : 'bg-amber-400'
-              }`}
-            ></span>
-            <span 
-              className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                firestoreStatus === 'connected' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]' : 'bg-amber-500'
-              }`}
-            ></span>
-          </span>
-        </div>
-
-        {/* Separator */}
-        <span className="text-slate-700 text-[10px] select-none">•</span>
-
-        {/* Voyant 2 : Cloudflare D1 (Bleu / Connecté) */}
-        <div 
-          className="flex items-center justify-center relative p-0.5" 
-          title={cloudflareStatus === 'connected' ? 'Cloudflare D1 : Connecté' : 'Cloudflare D1 : Vérification...'}
+          title={cloudflareStatus === 'connected' ? 'Base Principale : Cloudflare D1 (Connecté)' : 'Base Principale : Cloudflare D1 (Vérification...)'}
         >
           <span className="relative flex h-2.5 w-2.5">
             <span 
@@ -125,6 +103,28 @@ export const DatabaseStatusIndicators: React.FC<DatabaseStatusIndicatorsProps> =
             <span 
               className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
                 cloudflareStatus === 'connected' ? 'bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.9)]' : 'bg-slate-500'
+              }`}
+            ></span>
+          </span>
+        </div>
+
+        {/* Separator */}
+        <span className="text-slate-700 text-[10px] select-none">•</span>
+
+        {/* Voyant 2 : Firestore (Rouge / Base Secondaire & Réplication) */}
+        <div 
+          className="flex items-center justify-center relative p-0.5" 
+          title={firestoreStatus === 'connected' ? 'Base Secondaire : Firestore (Réplication Active)' : 'Base Secondaire : Firestore (Quota Dépassé)'}
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span 
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                firestoreStatus === 'connected' ? 'bg-red-400' : 'bg-amber-400'
+              }`}
+            ></span>
+            <span 
+              className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                firestoreStatus === 'connected' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]' : 'bg-amber-500'
               }`}
             ></span>
           </span>
@@ -141,48 +141,48 @@ export const DatabaseStatusIndicators: React.FC<DatabaseStatusIndicatorsProps> =
               <Database className="w-3.5 h-3.5 text-indigo-400" />
               État des Bases de Données
             </h5>
-            <span className="text-[8px] bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded font-mono font-bold">Temps Réel</span>
+            <span className="text-[8px] bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded font-mono font-bold">Cloudflare 1ère</span>
           </div>
 
           <div className="space-y-3">
-            {/* Firestore Details */}
+            {/* Cloudflare D1 Details (Primary) */}
+            <div className="flex items-start gap-2.5 bg-slate-900/70 p-2.5 rounded-xl border border-sky-900/40">
+              <div className="mt-1">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]"></span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1 mb-0.5">
+                  <p className="text-[10.5px] font-black text-sky-400 uppercase tracking-tight">Base Principale : Cloudflare D1</p>
+                  <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase bg-sky-950/80 text-sky-300 border border-sky-800/50">
+                    Prioritaire
+                  </span>
+                </div>
+                <p className="text-[9.5px] text-slate-300 leading-snug">
+                  {isCloudflareRemote 
+                    ? 'Base de production principale active sur Cloudflare D1.' 
+                    : 'Base principale active avec persistance haute disponibilité.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Firestore Details (Secondary) */}
             <div className="flex items-start gap-2.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800/60">
               <div className="mt-1">
                 <span className="flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]"></span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1 mb-0.5">
-                  <p className="text-[10.5px] font-black text-red-400 uppercase tracking-tight">Voyant Rouge : Firestore</p>
+                  <p className="text-[10.5px] font-black text-red-400 uppercase tracking-tight">Base Secondaire : Firestore</p>
                   <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
                     firestoreStatus === 'connected' ? 'bg-red-950/80 text-red-300 border border-red-800/50' : 'bg-amber-950/80 text-amber-300 border border-amber-800/50'
                   }`}>
-                    {firestoreStatus === 'connected' ? 'Connecté' : 'Quota Dépassé'}
+                    {firestoreStatus === 'connected' ? 'Réplication' : 'Quota Dépassé'}
                   </span>
                 </div>
                 <p className="text-[9.5px] text-slate-300 leading-snug">
                   {firestoreStatus === 'connected' 
-                    ? 'Synchronisation temps réel active avec Firebase Firestore.' 
-                    : 'Quota Spark dépassé. Le basculement vers Cloudflare D1 est actif.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Cloudflare D1 Details */}
-            <div className="flex items-start gap-2.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800/60">
-              <div className="mt-1">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]"></span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-1 mb-0.5">
-                  <p className="text-[10.5px] font-black text-sky-400 uppercase tracking-tight">Voyant Bleu : Cloudflare D1</p>
-                  <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase bg-sky-950/80 text-sky-300 border border-sky-800/50">
-                    Connecté
-                  </span>
-                </div>
-                <p className="text-[9.5px] text-slate-300 leading-snug">
-                  {isCloudflareRemote 
-                    ? 'Connecté à la base D1 Cloudflare distante.' 
-                    : 'Relais D1 actif avec persistance haute disponibilité.'}
+                    ? 'Sauvegarde secondaire & réplication de secours active.' 
+                    : 'Quota Firestore atteint : Cloudflare D1 continue d\'assurer le service principal sans interruption.'}
                 </p>
               </div>
             </div>
