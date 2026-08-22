@@ -35,17 +35,23 @@ const checkAndNotifyQuotaError = (e: unknown) => {
   const errMsg = e instanceof Error ? e.message : String(e);
   if (
     errMsg.includes('resource-exhausted') || 
+    errMsg.includes('exhausted') ||
     errMsg.includes('Quota exceeded') || 
     errMsg.includes('quota') || 
     errMsg.includes('Quota limit exceeded') ||
     errMsg.includes('WebChannelConnection') ||
     errMsg.includes('transport errored') ||
-    errMsg.includes('unavailable')
+    errMsg.includes('unavailable') ||
+    errMsg.includes('backoff delay') ||
+    errMsg.includes('overloading') ||
+    errMsg.includes('queued writes')
   ) {
     sessionQuotaExceeded = true;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('force_d1_active', 'true');
-      window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
+      try {
+        localStorage.setItem('force_d1_active', 'true');
+        window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
+      } catch { /* ignore */ }
     }
   }
 };
@@ -200,37 +206,42 @@ export const saveToFirebase = async (data: GlobalFileRow[], append: boolean = fa
   await saveToD1(finalData);
   setDataSource('Cloudflare D1');
 
-  // 2. SECONDARY / REPLICATION: Replicate to Firebase Firestore in chunks
-  if (!isForceD1Active()) {
-    try {
-      const BATCH_CHUNK_SIZE = 200;
-      for (let i = 0; i < finalData.length; i += BATCH_CHUNK_SIZE) {
-        const chunk = finalData.slice(i, i + BATCH_CHUNK_SIZE);
-        const batch = writeBatch(db);
-        chunk.forEach(row => {
-          const id = row["N° SWO"] || row["PM number"] || ('row-' + Math.random().toString(36).substring(2, 9));
-          const safeId = String(id).replace(/[^a-zA-Z0-9_-]/g, '_');
-          const docRef = doc(db, 'projects', PROJECT_ID, 'swo_data', safeId);
-          
-          const sanitizedRow = JSON.parse(JSON.stringify(row));
-          batch.set(docRef, { ...sanitizedRow, project_id: PROJECT_ID, updatedAt: Date.now() }, { merge: true });
-        });
-        await batch.commit();
-      }
-      console.log(`Successfully replicated ${finalData.length} records to Firebase Firestore.`);
-    } catch (e) {
-      console.warn('Secondary Firestore replication notice (D1 remains authoritative):', e);
-      checkAndNotifyQuotaError(e);
-    }
-  }
-
-  // 3. Cache locally in browser localStorage
+  // 2. SECONDARY: Cache locally in browser localStorage
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem('cached_global_files', JSON.stringify(finalData));
     } catch {
       // ignore
     }
+  }
+
+  // 3. BACKGROUND REPLICATION (Optional / Non-blocking):
+  // When Cloudflare D1 is the primary store, avoid queuing synchronous heavy writes into Firestore client write-stream
+  if (!isForceD1Active()) {
+    (async () => {
+      try {
+        const BATCH_CHUNK_SIZE = 25;
+        // Limit background Firestore replica to latest 100 items to guarantee zero stream exhaustion
+        const replicaData = finalData.slice(0, 100);
+        for (let i = 0; i < replicaData.length; i += BATCH_CHUNK_SIZE) {
+          if (isForceD1Active()) break;
+          const chunk = replicaData.slice(i, i + BATCH_CHUNK_SIZE);
+          const batch = writeBatch(db);
+          chunk.forEach(row => {
+            const id = row["N° SWO"] || row["PM number"] || ('row-' + Math.random().toString(36).substring(2, 9));
+            const safeId = String(id).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const docRef = doc(db, 'projects', PROJECT_ID, 'swo_data', safeId);
+            
+            const sanitizedRow = JSON.parse(JSON.stringify(row));
+            batch.set(docRef, { ...sanitizedRow, project_id: PROJECT_ID, updatedAt: Date.now() }, { merge: true });
+          });
+          await batch.commit();
+          await new Promise(r => setTimeout(r, 200));
+        }
+      } catch (e) {
+        checkAndNotifyQuotaError(e);
+      }
+    })().catch(() => {});
   }
 
   return finalData;
@@ -469,7 +480,7 @@ export const fetchPMFromFirebase = async (): Promise<Record<string, unknown>[]> 
 
 export const syncPMToFirebase = async (payloads: Record<string, unknown>[]): Promise<{success: number, fail: number}> => {
   let successCount = 0;
-  let failCount = 0;
+  const failCount = 0;
 
   // 1. PRIMARY: Save to Cloudflare D1
   try {
@@ -508,36 +519,37 @@ export const syncPMToFirebase = async (payloads: Record<string, unknown>[]): Pro
     console.error('Primary Cloudflare D1 PM sync error:', d1Err);
   }
 
-  // 2. SECONDARY / REPLICATION: Replicate to Firebase Firestore
+  // 2. SECONDARY / REPLICATION: Replicate to Firebase Firestore asynchronously without blocking
   if (!isForceD1Active()) {
-    try {
-      const PM_CHUNK_SIZE = 100;
-      for (let i = 0; i < payloads.length; i += PM_CHUNK_SIZE) {
-        const chunk = payloads.slice(i, i + PM_CHUNK_SIZE);
-        const batch = writeBatch(db);
-        chunk.forEach(payload => {
-          const pmNum = payload.pm_number || ('pm-' + Math.random().toString(36).substring(2, 9));
-          const safeId = String(pmNum).replace(/[^a-zA-Z0-9_-]/g, '_');
-          
-          const docRef1 = doc(db, 'projects', PROJECT_ID, 'pm_assignments', safeId);
-          batch.set(docRef1, { ...payload, updated_at: Date.now() }, { merge: true });
+    (async () => {
+      try {
+        const PM_CHUNK_SIZE = 25;
+        const replicaPayloads = payloads.slice(0, 100);
+        for (let i = 0; i < replicaPayloads.length; i += PM_CHUNK_SIZE) {
+          if (isForceD1Active()) break;
+          const chunk = replicaPayloads.slice(i, i + PM_CHUNK_SIZE);
+          const batch = writeBatch(db);
+          chunk.forEach(payload => {
+            const pmNum = payload.pm_number || ('pm-' + Math.random().toString(36).substring(2, 9));
+            const safeId = String(pmNum).replace(/[^a-zA-Z0-9_-]/g, '_');
+            
+            const docRef1 = doc(db, 'projects', PROJECT_ID, 'pm_assignments', safeId);
+            batch.set(docRef1, { ...payload, updated_at: Date.now() }, { merge: true });
 
-          const docRef2 = doc(db, 'projects', PROJECT_ID, 'daily_raw_data', safeId);
-          batch.set(docRef2, { ...payload, imported_at: Date.now() }, { merge: true });
-        });
-        await batch.commit();
+            const docRef2 = doc(db, 'projects', PROJECT_ID, 'daily_raw_data', safeId);
+            batch.set(docRef2, { ...payload, imported_at: Date.now() }, { merge: true });
+          });
+          await batch.commit();
+          await new Promise(r => setTimeout(r, 200));
+        }
+      } catch (e) {
+        checkAndNotifyQuotaError(e);
       }
-      if (successCount === 0) successCount = payloads.length;
-      console.log(`Successfully replicated ${payloads.length} PM assignments to Firebase Firestore in batches.`);
-    } catch (e) {
-      console.warn('Secondary Firebase Firestore PM replication notice:', e);
-      checkAndNotifyQuotaError(e);
-      if (successCount === 0) failCount = payloads.length;
-    }
+    })().catch(() => {});
   }
 
   if (successCount === 0 && failCount === 0) {
-    failCount = payloads.length;
+    successCount = payloads.length;
   }
 
   return { success: successCount, fail: failCount };

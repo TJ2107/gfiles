@@ -940,7 +940,7 @@ export const GMAOStockTracker: React.FC<GMAOStockTrackerProps> = ({ data }) => {
             </div>
 
             <div className="h-80 w-full min-h-[300px] min-w-0 pt-4">
-              <ResponsiveContainer width="100%" height={300} minWidth={0} minHeight={250}>
+              <ResponsiveContainer width="100%" height={300} minWidth={0} minHeight={250} debounce={50}>
                 <BarChart data={regionalChartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                   <XAxis dataKey="region" tick={{ fontSize: 10, fontWeight: 700 }} angle={-25} textAnchor="end" height={50} />
@@ -974,7 +974,7 @@ export const GMAOStockTracker: React.FC<GMAOStockTrackerProps> = ({ data }) => {
               </div>
 
               <div className="h-72 w-full min-h-[250px] min-w-0 flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={200}>
+                <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={200} debounce={50}>
                   <PieChart>
                     <Pie
                       data={categoryPieData}

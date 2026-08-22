@@ -236,6 +236,46 @@ async function startServer() {
     }
   };
 
+  const fetchCloudflareD1AllGlobalFiles = async (): Promise<any[] | null> => {
+    const config = getCloudflareD1Config();
+    if (!config || cfAuthFailed) return null;
+
+    try {
+      await ensureCloudflareD1Tables();
+      if (cfAuthFailed) return null;
+
+      const allRows: any[] = [];
+      let offset = 0;
+      const limit = 10000;
+      while (true) {
+        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/d1/database/${config.databaseId}/query`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.apiToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sql: `SELECT * FROM global_files LIMIT ${limit} OFFSET ${offset};` })
+        });
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            cfAuthFailed = true;
+            cfLastError = `Jeton Cloudflare API non autorisé ou invalide (${res.status}). Relais local actif.`;
+          }
+          break;
+        }
+        const body: any = await res.json();
+        const rows = body.result?.[0]?.results || [];
+        if (!rows.length) break;
+        allRows.push(...rows);
+        if (rows.length < limit) break;
+        offset += limit;
+      }
+      return allRows.length > 0 ? allRows : null;
+    } catch {
+      return null;
+    }
+  };
+
   // API Routes
   app.get('/api/health', (req, res) => {
     const hasKeys = !!(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_DATABASE_ID && process.env.CLOUDFLARE_API_TOKEN);
@@ -869,10 +909,30 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
   // H. GET /api/d1/global-files
   app.get('/api/d1/global-files', async (req, res) => {
     try {
+      // 1. PRIMARY: Always query remote Cloudflare D1 first when configured
+      const cfRows = await fetchCloudflareD1AllGlobalFiles();
+      if (cfRows && cfRows.length > 0) {
+        const rows = cfRows.map((r: any) => {
+          try { 
+            return typeof r.raw_json === 'string' ? JSON.parse(r.raw_json) : (r.data || r); 
+          } catch { 
+            return null; 
+          }
+        }).filter((r: any) => r !== null);
+
+        // Keep local relay in sync with the real D1 data
+        try {
+          const db = readMockDb();
+          db.global_files = cfRows;
+          writeMockDb(db);
+        } catch { /* ignore */ }
+
+        return res.json({ success: true, rows, source: 'Cloudflare D1' });
+      }
+
+      // 2. SECONDARY: Fallback to local relay if Cloudflare is not reachable or empty
       const db = readMockDb();
       let results = db.global_files || [];
-
-      // 1. If local relay has user-updated files, return them immediately
       if (results.length > 0) {
         const rows = results.map((r: any) => {
           try { 
@@ -884,20 +944,7 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
         return res.json({ success: true, rows, source: 'Local Relay' });
       }
 
-      // 2. If local relay is empty, check remote Cloudflare D1
-      const cfRows = await queryCloudflareD1('SELECT * FROM global_files LIMIT 10000');
-      if (cfRows && cfRows.length > 0) {
-        const rows = cfRows.map((r: any) => {
-          try { 
-            return typeof r.raw_json === 'string' ? JSON.parse(r.raw_json) : (r.data || r); 
-          } catch { 
-            return null; 
-          }
-        }).filter((r: any) => r !== null);
-        return res.json({ success: true, rows, source: 'Cloudflare D1' });
-      }
-
-      // 3. Fallback to pm_assignments
+      // 3. TERTIARY: Fallback to pm_assignments
       if (db.pm_assignments && db.pm_assignments.length > 0) {
         results = db.pm_assignments.map((row: any) => ({
           id: row.id,
@@ -936,7 +983,7 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
       const db = readMockDb();
       
       db.global_files = items.map((item: any) => ({
-        id: 'row-' + Math.random().toString(36).substring(2, 9),
+        id: item["N° SWO"] ? `swo-${String(item["N° SWO"]).trim()}` : (item["PM number"] ? `pm-${String(item["PM number"]).trim()}` : ('row-' + Math.random().toString(36).substring(2, 9))),
         swo_number: item["N° SWO"] || '',
         pm_number: item["PM number"] || '',
         raw_json: JSON.stringify(item),
@@ -951,18 +998,27 @@ Rédigez une réponse claire, synthétique et très précise en français markdo
         const config = getCloudflareD1Config();
         if (!config || cfAuthFailed) return;
         
-        if (items.length === 0) {
-          await queryCloudflareD1('DELETE FROM global_files');
-          return;
-        }
+        // High-performance bulk multi-row INSERT into Cloudflare D1
+        await queryCloudflareD1('DELETE FROM global_files');
 
-        const topItems = items.slice(0, 100);
-        for (const it of topItems) {
-          const rowId = 'row-' + Math.random().toString(36).substring(2, 9);
-          await queryCloudflareD1(`
-            INSERT INTO global_files (id, swo_number, pm_number, raw_json, updated_at)
-            VALUES (?, ?, ?, ?, ?)
-          `, [rowId, it["N° SWO"] || '', it["PM number"] || '', JSON.stringify(it), new Date().toISOString()]);
+        const BULK_CHUNK_SIZE = 50;
+        for (let i = 0; i < items.length; i += BULK_CHUNK_SIZE) {
+          const chunk = items.slice(i, i + BULK_CHUNK_SIZE);
+          const nowIso = new Date().toISOString();
+          
+          const rowsToInsert = chunk.map((it: any, idx: number) => {
+            const swo = it["N° SWO"] ? String(it["N° SWO"]).trim() : '';
+            const pm = it["PM number"] ? String(it["PM number"]).trim() : '';
+            const rowId = swo ? `swo-${swo}` : (pm ? `pm-${pm}` : `row-${i + idx}-${Math.random().toString(36).substring(2, 7)}`);
+            return [rowId, swo, pm, JSON.stringify(it), nowIso];
+          });
+
+          const placeholders = rowsToInsert.map(() => "(?, ?, ?, ?, ?)").join(", ");
+          const params = rowsToInsert.flat();
+          await queryCloudflareD1(
+            `INSERT OR REPLACE INTO global_files (id, swo_number, pm_number, raw_json, updated_at) VALUES ${placeholders}`,
+            params
+          );
         }
       })().catch(err => {
         console.warn('Background global_files sync to Cloudflare D1 notice:', err?.message || err);

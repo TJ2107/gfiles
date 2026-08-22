@@ -274,7 +274,7 @@ export const TTFAnalysis: React.FC<TTFAnalysisProps> = ({ data, onFilterChange, 
              <button onClick={() => downloadChartAsJpg(priorityChartRef, 'respect_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-4 h-4 sm:w-5 sm:h-5" /></button>
           </div>
           <div className="h-[280px] sm:h-[320px] w-full min-h-[260px] min-w-0 relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
+            <ResponsiveContainer width="100%" height={280} minWidth={0} minHeight={240} debounce={50}>
               <BarChart data={analysis.chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />
@@ -294,7 +294,7 @@ export const TTFAnalysis: React.FC<TTFAnalysisProps> = ({ data, onFilterChange, 
               <button onClick={() => downloadChartAsJpg(trendChartRef, 'tendance_sla')} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Camera className="w-4 h-4 sm:w-5 sm:h-5" /></button>
            </div>
            <div className="h-[280px] sm:h-[320px] w-full min-h-[260px] min-w-0 relative">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
+              <ResponsiveContainer width="100%" height={280} minWidth={0} minHeight={240} debounce={50}>
                  <ComposedChart data={analysis.trendData}>
                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                    <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />

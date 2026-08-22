@@ -738,8 +738,8 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[240px] sm:h-[270px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[260px] sm:h-[280px] w-full min-w-0 min-h-[260px] relative">
+                  <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={240} debounce={50}>
                     <BarChart 
                       data={stats.flowData} 
                       onClick={(data) => data?.activePayload && handleDrillDown(data.activePayload[0].payload, 'FLOW')}
@@ -785,8 +785,8 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[240px] sm:h-[270px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[260px] sm:h-[280px] w-full min-w-0 min-h-[260px] relative">
+                  <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={240} debounce={50}>
                     <BarChart 
                       data={stats.efficiencyData} 
                       onClick={(data) => data?.activePayload && handleDrillDown(data.activePayload[0].payload, 'EFFICIENCY')}
@@ -857,8 +857,8 @@ export const GMSheet: React.FC<GMSheetProps> = ({ data, onFilterChange, onSwitch
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="h-[250px] sm:h-[280px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[260px] sm:h-[280px] w-full min-w-0 min-h-[260px] relative">
+                  <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={240} debounce={50}>
                     <BarChart data={stats.pendingXData} layout="vertical" margin={{ left: 5, right: 30, top: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#cbd5e1" /> 
                       <XAxis type="number" tick={{fontSize: 9.5, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} /> 
